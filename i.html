@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Quản Lý Chi Tiêu</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"/>
+  <!-- Pikaday CSS -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/pikaday/css/pikaday.css">
+
+  <style>
+    body {
+      background: #f0f2f5;
+      font-family: 'Segoe UI', sans-serif;
+      padding: 20px;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 30px;
+      color: #333;
+    }
+
+    .money-total {
+      font-size: 1.3rem;
+      font-weight: bold;
+      text-align: center;
+      margin-bottom: 20px;
+      color: #28a745;
+    }
+
+    .item-card {
+      background: #fff;
+      border-radius: 10px;
+      margin-bottom: 15px;
+      transition: all 0.2s ease;
+    }
+
+    .item-card:hover {
+      box-shadow: 0 3px 8px rgba(0, 0, 0, 0.08);
+    }
+
+    .search-box {
+      margin-bottom: 20px;
+    }
+
+    .btn-add {
+      position: fixed;
+      bottom: 25px;
+      right: 25px;
+      width: 60px;
+      height: 60px;
+      font-size: 28px;
+      padding: 0;
+      border-radius: 50%;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    }
+
+    .modal-content {
+      border-radius: 12px;
+    }
+
+    #loading-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background-color: rgba(255, 255, 255, 0.6);
+      z-index: 9999;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      display: none;
+      backdrop-filter: blur(2px);
+    }
+
+    @media (max-width: 768px) {
+      .btn-add {
+        width: 50px;
+        height: 50px;
+        font-size: 22px;
+      }
+
+      .item-card {
+        font-size: 0.9rem;
+      }
+    }
+
+    .pikaday__input {
+      background: #fff;
+      border: 1px solid #ced4da;
+      border-radius: 0.25rem;
+      padding: 0.375rem 0.75rem;
+      width: 100%;
+    }
+  </style>
+</head>
+<body>
+  <!-- Loading Overlay -->
+  <div id="loading-overlay">
+    <div class="spinner-border text-primary" role="status">
+      <span class="visually-hidden">Đang tải...</span>
+    </div>
+  </div>
+  <div class="container">
+    <h2 class="header">Quản Lý Chi Tiêu Hàng Tháng</h2>
+
+    <div class="search-box">
+      <input type="text" id="searchInput" class="form-control" placeholder="Tìm kiếm nội dung hoặc ghi chú...">
+    </div>
+
+    <div class="money-total" id="tongTien">Tổng tiền: Đang tải...</div>
+
+    <div id="listContainer"></div>
+    <nav>
+      <ul class="pagination mt-3" id="pagination"></ul>
+    </nav>
+  </div>
+
+  <!-- Nút Thêm -->
+  <button class="btn btn-primary btn-lg rounded-circle btn-add" data-bs-toggle="modal" data-bs-target="#addModal">
+    +
+  </button>
+
+  <!-- Modal Thêm Mới -->
+  <div class="modal fade" id="addModal" tabindex="-1" aria-labelledby="addModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <form id="addForm" class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="addModalLabel">Thêm Khoản Thu/Chi</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div class="mb-2">
+            <input type="text" name="noidung" class="form-control" placeholder="Nội dung" required autocomplete="off">
+          </div>
+          <div class="mb-2">
+            <input type="number" name="sotien" class="form-control" placeholder="Số tiền" required autocomplete="off">
+          </div>
+          <div class="mb-2">
+            <input type="text" name="ghichu" class="form-control" placeholder="Ghi chú">
+          </div>
+          <div class="mb-2">
+            <input type="text" name="ngay_display" class="form-control datepicker" placeholder="Ngày (dd/mm/yyyy)" required autocomplete="off">
+            <input type="hidden" name="ngay">
+          </div>
+          <div class="mb-2">
+            <select name="loai" class="form-control">
+              <option value="thu">Thu</option>
+              <option value="chi">Chi</option>
+            </select>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-success">Lưu</button>
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal Sửa -->
+  <div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <form id="editForm" class="modal-content">
+        <input type="hidden" name="row">
+        <div class="modal-header">
+          <h5 class="modal-title" id="editModalLabel">Sửa Khoản Thu/Chi</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div class="mb-2">
+            <input type="text" name="noidung" class="form-control" placeholder="Nội dung" required autocomplete="off">
+          </div>
+          <div class="mb-2">
+            <input type="number" name="sotien" class="form-control" placeholder="Số tiền" required autocomplete="off">
+          </div>
+          <div class="mb-2">
+            <input type="text" name="ghichu" class="form-control" placeholder="Ghi chú">
+          </div>
+          <div class="mb-2">
+            <input type="text" name="ngay_display" class="form-control datepicker" placeholder="Ngày (dd/mm/yyyy)" required autocomplete="off">
+            <input type="hidden" name="ngay">
+          </div>
+          <div class="mb-2">
+            <select name="loai" class="form-control">
+              <option value="thu">Thu</option>
+              <option value="chi">Chi</option>
+            </select>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-success">Lưu thay đổi</button>
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/moment@2.29.4/moment.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/pikaday@1.8.2/pikaday.min.js"></script>
+  <script>
+    const SHEET_URL = "https://script.google.com/macros/s/AKfycbzQL-tBgrAsDloSj8f-14CQTb3A2Dx44HCDW1qyglzDc7MK_47CRM1MXZBGs_ycW97i/exec";
+    let dataList = [], filteredList = [], currentPage = 1, perPage = 5;
+
+    // Khởi tạo Pikaday
+    document.querySelectorAll(".datepicker").forEach(input => {
+      let isUpdating = false; // Cờ để ngăn vòng lặp
+      const picker = new Pikaday({
+        field: input,
+        format: "DD/MM/YYYY",
+        toString(date) {
+          const day = String(date.getDate()).padStart(2, "0");
+          const month = String(date.getMonth() + 1).padStart(2, "0");
+          const year = date.getFullYear();
+          return `${day}/${month}/${year}`;
+        },
+        parse(dateString) {
+          const parts = dateString.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+          if (parts) {
+            const [_, day, month, year] = parts;
+            return new Date(year, month - 1, day);
+          }
+          return null;
+        },
+        onSelect(date) {
+          if (isUpdating) return; // Ngăn gọi lại khi đang cập nhật
+          isUpdating = true;
+          const isoDate = moment(date).format("YYYY-MM-DD");
+          input.closest(".mb-2").querySelector("[name=ngay]").value = isoDate;
+          input.value = this.toString(date);
+          isUpdating = false;
+        }
+      });
+
+      input._pikaday = picker;
+
+      // Xử lý nhập tay
+      input.addEventListener("change", function() {
+        if (isUpdating) return; // Ngăn xử lý khi Pikaday đang cập nhật
+        isUpdating = true;
+        const value = this.value;
+        if (value && !/^\d{2}\/\d{2}\/\d{4}$/.test(value)) {
+          alert("Vui lòng nhập ngày theo định dạng dd/mm/yyyy (ví dụ: 25/12/2025).");
+          this.value = "";
+          this.closest(".mb-2").querySelector("[name=ngay]").value = "";
+        } else if (value) {
+          const date = moment(value, "DD/MM/YYYY", true);
+          if (!date.isValid()) {
+            alert("Ngày không hợp lệ. Vui lòng nhập lại (ví dụ: 25/12/2025).");
+            this.value = "";
+            this.closest(".mb-2").querySelector("[name=ngay]").value = "";
+          } else {
+            this.closest(".mb-2").querySelector("[name=ngay]").value = date.format("YYYY-MM-DD");
+            this._pikaday.setDate(date.toDate(), true); // true để không kích hoạt onSelect
+          }
+        }
+        isUpdating = false;
+      });
+    });
+
+    function showLoading() {
+      document.getElementById("loading-overlay").style.display = "flex";
+    }
+
+    function hideLoading() {
+      document.getElementById("loading-overlay").style.display = "none";
+    }
+
+    function formatDateToDisplay(dateStr) {
+      if (!dateStr) return "";
+      const [year, month, day] = dateStr.split("-");
+      return `${day}/${month}/${year}`;
+    }
+
+    async function fetchData() {
+      try {
+        showLoading();
+        const res = await fetch(SHEET_URL);
+        const data = await res.json();
+        dataList = data.reverse().map(item => ({
+          ...item,
+          ngayDisplay: formatDateToDisplay(item.ngay)
+        }));
+        filteredList = [...dataList];
+        renderList();
+        renderPagination();
+        updateTotal();
+      } catch (err) {
+        console.error("Lỗi tải dữ liệu:", err);
+        alert("Đã có lỗi xảy ra khi tải dữ liệu!");
+      } finally {
+        hideLoading();
+      }
+    }
+
+    function updateTotal() {
+      const tong = filteredList.reduce((acc, i) => {
+        return i.loai === "thu"
+          ? acc + parseFloat(i.sotien || 0)
+          : acc - parseFloat(i.sotien || 0);
+      }, 0);
+      const tongThu = filteredList
+        .filter(i => i.loai === "thu")
+        .reduce((acc, i) => acc + parseFloat(i.sotien || 0), 0);
+      const tongChi = filteredList
+        .filter(i => i.loai === "chi")
+        .reduce((acc, i) => acc + parseFloat(i.sotien || 0), 0);
+      document.getElementById("tongTien").innerHTML = `
+        Tổng tiền: <span class="${tong >= 0 ? "text-success" : "text-danger"}">${tong.toLocaleString()} đ</span><br/>
+        <small class="text-muted">Thu: ${tongThu.toLocaleString()} đ | Chi: ${tongChi.toLocaleString()} đ</small>
+      `;
+    }
+
+    function renderList() {
+      const start = (currentPage - 1) * perPage;
+      const pageData = filteredList.slice(start, start + perPage);
+
+      const container = document.getElementById("listContainer");
+      container.innerHTML = "";
+      pageData.forEach(item => {
+        const div = document.createElement("div");
+        div.className = `card item-card p-3 border-start-${item.loai === 'chi' ? 'danger' : 'success'}`;
+        div.innerHTML = `
+          <div class="d-flex justify-content-between align-items-start">
+            <div>
+              <h6 class="mb-1">${item.noidung}</h6>
+              <div class="mb-1">
+                <span class="${item.loai === 'chi' ? 'text-danger' : 'text-success'} fw-bold">
+                  ${parseInt(item.sotien).toLocaleString()} đ
+                </span>
+              </div>
+              <small class="text-muted">${item.ngayDisplay} ${item.ghichu ? ' - ' + item.ghichu : ''}</small>
+            </div>
+            <div>
+              <button class="btn btn-sm btn-outline-primary me-1" onclick='editItem(${JSON.stringify(item)})'>Sửa</button>
+              <button class="btn btn-sm btn-outline-danger" onclick='deleteItem(${item.row})'>Xoá</button>
+            </div>
+          </div>
+        `;
+        container.appendChild(div);
+      });
+    }
+
+    function renderPagination() {
+      const pageCount = Math.ceil(filteredList.length / perPage);
+      const pagination = document.getElementById("pagination");
+      pagination.innerHTML = "";
+
+      for (let i = 1; i <= pageCount; i++) {
+        const li = document.createElement("li");
+        li.className = `page-item ${i === currentPage ? 'active' : ''}`;
+        li.innerHTML = `<a class="page-link" href="#">${i}</a>`;
+        li.onclick = () => {
+          currentPage = i;
+          renderList();
+          renderPagination();
+        };
+        pagination.appendChild(li);
+      }
+    }
+
+    document.getElementById("searchInput").addEventListener("input", function() {
+      const keyword = this.value.toLowerCase();
+      filteredList = dataList.filter(item =>
+        item.noidung.toLowerCase().includes(keyword) || (item.ghichu || '').toLowerCase().includes(keyword)
+      );
+      currentPage = 1;
+      renderList();
+      renderPagination();
+      updateTotal();
+    });
+
+    document.getElementById("addForm").addEventListener("submit", async function(e) {
+      e.preventDefault();
+      const formData = new FormData(this);
+      const data = Object.fromEntries(formData.entries());
+      if (!data.ngay) {
+        alert("Vui lòng chọn hoặc nhập ngày hợp lệ theo định dạng dd/mm/yyyy (ví dụ: 25/12/2025).");
+        return;
+      }
+      data.method = 'add';
+      try {
+        showLoading();
+        await fetch(SHEET_URL, {
+          method: "POST",
+          body: JSON.stringify(data)
+        });
+        this.reset();
+        const modal = bootstrap.Modal.getInstance(document.getElementById('addModal'));
+        modal.hide();
+        fetchData();
+      } catch (err) {
+        alert("Đã có lỗi xảy ra! Vui lòng báo lại cho Hải");
+      } finally {
+        hideLoading();
+      }
+    });
+
+    function editItem(item) {
+      const modal = new bootstrap.Modal(document.getElementById('editModal'));
+      const form = document.getElementById('editForm');
+      form.querySelector("[name=row]").value = item.row;
+      form.querySelector("[name=noidung]").value = item.noidung;
+      form.querySelector("[name=sotien]").value = item.sotien;
+      form.querySelector("[name=ghichu]").value = item.ghichu;
+      form.querySelector("[name=ngay_display]").value = item.ngayDisplay;
+      form.querySelector("[name=ngay]").value = item.ngay;
+      form.querySelector("[name=loai]").value = item.loai;
+      const picker = form.querySelector(".datepicker")._pikaday;
+      if (picker) {
+        picker.setDate(moment(item.ngay, "YYYY-MM-DD").toDate(), true); // true để không kích hoạt onSelect
+      }
+      modal.show();
+    }
+
+    document.getElementById("editForm").addEventListener("submit", async function(e) {
+      e.preventDefault();
+      const formData = new FormData(this);
+      const data = Object.fromEntries(formData.entries());
+      if (!data.ngay) {
+        alert("Vui lòng chọn hoặc nhập ngày hợp lệ theo định dạng dd/mm/yyyy (ví dụ: 25/12/2025).");
+        return;
+      }
+      data.method = 'edit';
+      try {
+        showLoading();
+        await fetch(SHEET_URL, {
+          method: "POST",
+          body: JSON.stringify(data)
+        });
+        bootstrap.Modal.getInstance(document.getElementById('editModal')).hide();
+        fetchData();
+      } catch (err) {
+        alert("Đã có lỗi xảy ra! Vui lòng báo lại cho Hải");
+      } finally {
+        hideLoading();
+      }
+    });
+
+    async function deleteItem(row) {
+      if (confirm("Bạn có chắc muốn xoá dòng này?")) {
+        try {
+          showLoading();
+          await fetch(SHEET_URL, {
+            method: "POST",
+            body: JSON.stringify({ row: row, method: 'delete' })
+          });
+          fetchData();
+        } catch (err) {
+          alert("Đã có lỗi xảy ra! Vui lòng báo lại cho Hải");
+        } finally {
+          hideLoading();
+        }
+      }
+    }
+
+    fetchData();
+  </script>
+</body>
+</html>
