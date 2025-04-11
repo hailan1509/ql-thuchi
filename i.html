@@ -19,7 +19,7 @@
       text-align: center;
       color: #1a73e8;
       font-weight: 700;
-      margin-bottom: 20px;
+      margin-bottom: 10px;
       text-transform: uppercase;
       letter-spacing: 1px;
       text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.1);
@@ -29,14 +29,14 @@
       font-size: 1.3rem;
       font-weight: bold;
       text-align: center;
-      margin-bottom: 20px;
+      margin-bottom: 10px;
       color: #28a745;
     }
 
     .item-card {
       background: #fff;
       border-radius: 10px;
-      margin-bottom: 15px;
+      margin-bottom: 10px;
       transition: all 0.2s ease;
     }
 
@@ -45,7 +45,7 @@
     }
 
     .search-box {
-      margin-bottom: 20px;
+      margin-bottom: 10px;
     }
 
     .btn-add {
@@ -99,6 +99,14 @@
       padding: 0.375rem 0.75rem;
       width: 100%;
     }
+    .money-display {
+        font-size: 18px;
+        color: #333;
+        font-style: italic;
+    }
+    .text-muted {
+      font-size: 16px !important;
+    }
   </style>
 </head>
 <body>
@@ -145,7 +153,8 @@
           </div>
           <div class="mb-2">
             <span><b>Số tiền: </b></span>
-            &nbsp;<input type="number" name="sotien" class="form-control" placeholder="Số tiền" required autocomplete="off">
+            <div id="moneyDisplayAdd" class="money-display">Số tiền bạn đã nhập: 0</div>
+            <input type="number" name="sotien" class="form-control" placeholder="Số tiền" required autocomplete="off" oninput="changeMoney(this, 'moneyDisplayAdd')">
           </div>
           <div class="mb-2">
             <span><b>Ghi chú: </b></span>
@@ -187,7 +196,8 @@
             <input type="text" name="noidung" class="form-control" placeholder="Nội dung" required autocomplete="off">
           </div>
           <div class="mb-2">
-            <input type="number" name="sotien" class="form-control" placeholder="Số tiền" required autocomplete="off">
+            <div id="moneyDisplayEdit" class="money-display">Số tiền bạn đã nhập: 0</div>
+            <input type="number" name="sotien" class="form-control" placeholder="Số tiền" required autocomplete="off" oninput="changeMoney(this, 'moneyDisplayEdit')">
           </div>
           <div class="mb-2">
             <input type="text" name="ghichu" class="form-control" placeholder="Ghi chú">
@@ -324,7 +334,7 @@
         .reduce((acc, i) => acc + parseFloat(i.sotien || 0), 0);
       document.getElementById("tongTien").innerHTML = `
         Tổng tiền: <span class="${tong >= 0 ? "text-success" : "text-danger"}">${tong.toLocaleString()} đ</span><br/>
-        <small class="text-muted">Thu: ${tongThu.toLocaleString()} đ | Chi: ${tongChi.toLocaleString()} đ</small>
+        <small class="text-muted">Thu: ${tongThu.toLocaleString()} | Chi: ${tongChi.toLocaleString()}</small>
       `;
     }
 
@@ -355,8 +365,8 @@
               <small class="text-muted"><i>${item.ngayDisplay}</i> ${item.ghichu ? ' - ' + item.ghichu : ''}</small>
             </div>
             <div>
-              <button class="btn btn-sm btn-outline-primary me-1 mt-1" onclick='editItem(${JSON.stringify(item)})'>Sửa</button>
-              <button class="btn btn-sm btn-outline-danger mt-1" onclick='deleteItem(${item.row})'>Xoá</button>
+              <button class="btn btn-outline-primary me-1 mt-1" onclick='editItem(${JSON.stringify(item)})'>Sửa</button>
+              <button class="btn btn-outline-danger mt-1" onclick='deleteItem(${item.row})'>Xoá</button>
             </div>
           </div>
         `;
@@ -369,18 +379,58 @@
       const pagination = document.getElementById("pagination");
       pagination.innerHTML = "";
 
-      for (let i = 1; i <= pageCount; i++) {
+      function createPageItem(page, isActive = false, isDisabled = false, text = null) {
         const li = document.createElement("li");
-        li.className = `page-item ${i === currentPage ? 'active' : ''}`;
-        li.innerHTML = `<a class="page-link" href="#">${i}</a>`;
-        li.onclick = () => {
-          currentPage = i;
-          renderList();
-          renderPagination();
-        };
-        pagination.appendChild(li);
+        li.className = "page-item" + (isActive ? " active" : "") + (isDisabled ? " disabled" : "");
+
+        const a = document.createElement("a");
+        a.className = "page-link";
+        a.href = "#";
+        a.innerText = text || page;
+
+        if (!isDisabled) {
+          a.onclick = (e) => {
+            e.preventDefault();
+            if (page !== currentPage) {
+              currentPage = page;
+              renderList();
+              renderPagination();
+            }
+          };
+        }
+
+        li.appendChild(a);
+        return li;
+      }
+
+      if (pageCount <= 1) return; // Không cần phân trang
+
+      // Trang đầu
+      pagination.appendChild(createPageItem(1, currentPage === 1));
+
+      // Dấu "..." đầu
+      if (currentPage > 3) {
+        pagination.appendChild(createPageItem(null, false, true, "..."));
+      }
+
+      // Các trang gần currentPage
+      for (let i = currentPage - 1; i <= currentPage + 1; i++) {
+        if (i > 1 && i < pageCount) {
+          pagination.appendChild(createPageItem(i, currentPage === i));
+        }
+      }
+
+      // Dấu "..." cuối
+      if (currentPage < pageCount - 2) {
+        pagination.appendChild(createPageItem(null, false, true, "..."));
+      }
+
+      // Trang cuối
+      if (pageCount > 1) {
+        pagination.appendChild(createPageItem(pageCount, currentPage === pageCount));
       }
     }
+
 
     document.getElementById("searchInput").addEventListener("input", function() {
       const keyword = this.value.toLowerCase();
@@ -475,6 +525,12 @@
           hideLoading();
         }
       }
+    }
+
+    function changeMoney(e, eleText) {
+      const sotien = e.value;
+      const moneyDisplay = document.getElementById(eleText);
+      moneyDisplay.innerHTML = `Số tiền bạn đã nhập: <b>${new Intl.NumberFormat().format(sotien)} VNĐ</b>`;
     }
 
     fetchData();
