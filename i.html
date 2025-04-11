@@ -44,9 +44,9 @@
       box-shadow: 0 3px 8px rgba(0, 0, 0, 0.08);
     }
 
-    .search-box {
+    /* .search-box {
       margin-bottom: 10px;
-    }
+    } */
 
     .btn-add {
       position: fixed;
@@ -110,64 +110,113 @@
     .page-item a{
       padding:10px 20px !important;
     }
-    .pikaday__input {
-      background: #fff;
-      border: 1px solid #ced4da;
-      border-radius: 0.25rem;
-      padding: 0.375rem 0.75rem;
-      width: 100%;
-    }
+    /* Reset và base styles */
+.search-box {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 15px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
 
-    .date-range-search {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      margin-top: 10px;
-      overflow: hidden;
-    }
+/* Thanh tìm kiếm và nút toggle */
+.search-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
 
-    .date-range-toggle {
-      width: 30px;
-      height: 30px;
-      font-size: 18px;
-      padding: 0;
-      border-radius: 50%;
-      flex-shrink: 0;
-      transition: transform 0.3s ease;
-    }
+.form-control {
+  background: #fff;
+  border: 1px solid #ced4da;
+  border-radius: 0.375rem;
+  padding: 0.5rem 1rem;
+  font-size: 1rem;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+  flex: 1;
+}
 
-    .date-range-toggle.active {
-      transform: rotate(45deg); /* Xoay nút + thành x khi mở */
-    }
+.form-control:focus {
+  outline: none;
+  border-color: #007bff;
+  box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
 
-    .date-range-inputs {
-      display: flex;
-      gap: 10px;
-      max-width: 0;
-      opacity: 0;
-      transition: max-width 0.3s ease, opacity 0.2s ease;
-    }
+.date-range-toggle {
+  width: 40px;
+  height: 40px;
+  font-size: 1.25rem;
+  padding: 0;
+  border-radius: 50%;
+  border: 1px solid #007bff;
+  background: #fff;
+  color: #007bff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: background 0.3s ease, color 0.3s ease;
+}
 
-    .date-range-inputs.active {
-      max-width: 400px; /* Đủ rộng để chứa 2 input */
-      opacity: 1;
-    }
+.date-range-toggle:hover {
+  background: #007bff;
+  color: #fff;
+}
 
-    .date-range-inputs input {
-      flex: 1;
-      min-width: 0; /* Ngăn input bị co quá nhỏ */
-    }
+.date-range-toggle.active {
+  background: #007bff;
+  color: #fff;
+  /* Bỏ rotate(45deg) vì không cần xoay mũi tên */
+}
 
-    @media (max-width: 576px) {
-      .date-range-inputs {
-        flex-direction: column;
-        gap: 5px;
-      }
+/* Date range inputs */
+.date-range-search {
+  margin-top: 10px;
+  overflow: hidden;
+}
 
-      .date-range-inputs.active {
-        max-width: 100%;
-      }
-    }
+.date-range-inputs {
+  display: none;
+  gap: 10px;
+  opacity: 0;
+  max-height: 0;
+  transition: opacity 0.3s ease, max-height 0.3s ease;
+}
+
+.date-range-inputs.active {
+  display: flex;
+  opacity: 1;
+  max-height: 100px;
+}
+
+.date-range-inputs input {
+  flex: 1;
+  min-width: 0;
+  border-radius: 0.375rem;
+  padding: 0.5rem 1rem;
+  font-size: 1rem;
+}
+
+/* Responsive */
+@media (max-width: 576px) {
+  .date-range-inputs {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .date-range-inputs.active {
+    max-height: 150px;
+  }
+
+  .search-row {
+    gap: 8px;
+  }
+
+  .date-range-toggle {
+    width: 36px;
+    height: 36px;
+    font-size: 1.1rem;
+  }
+}
   </style>
 </head>
 <body>
@@ -179,11 +228,12 @@
   </div>
   <div class="container">
     <h2 class="header">THU CHI ĐÌNH TÂN KIM</h2>
-
     <div class="search-box">
-      <input type="text" id="searchInput" class="form-control mb-2" placeholder="Tìm kiếm nội dung hoặc ghi chú...">
+      <div class="search-row">
+        <input type="text" id="searchInput" class="form-control" placeholder="Tìm kiếm nội dung hoặc ghi chú...">
+        <button type="button" class="btn btn-outline-primary date-range-toggle">↓</button>
+      </div>
       <div class="date-range-search">
-        <button type="button" class="btn btn-outline-primary date-range-toggle">+</button>
         <div class="date-range-inputs">
           <input type="text" id="dateFrom" class="form-control datepicker" placeholder="Từ ngày (dd/mm/yyyy)">
           <input type="text" id="dateTo" class="form-control datepicker" placeholder="Đến ngày (dd/mm/yyyy)">
@@ -294,10 +344,23 @@
   <script src="https://cdn.jsdelivr.net/npm/moment@2.29.4/moment.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/pikaday@1.8.2/pikaday.min.js"></script>
   <script>
-    const SHEET_URL = "https://script.google.com/macros/s/AKfycbzQL-tBgrAsDloSj8f-14CQTb3A2Dx44HCDW1qyglzDc7MK_47CRM1MXZBGs_ycW97i/exec";
+    const SHEET_URL = "https://script.google.com/macros/s/AKfycbyptwabaU8O-LAhOyl0pnYtAh5VU-nuzeHcIohlJPMSVqzosJC0YLp1FoYN0PujN8ud/exec";
     let dataList = [], filteredList = [], currentPage = 1, perPage = 5; dataReal = [];
 
-    // Khởi tạo Pikaday
+    document.addEventListener('DOMContentLoaded', function () {
+      const toggleButton = document.querySelector('.date-range-toggle');
+      const dateRangeInputs = document.querySelector('.date-range-inputs');
+
+      toggleButton.addEventListener('click', function () {
+        // Toggle class 'active' cho nút
+        toggleButton.classList.toggle('active');
+        // Toggle class 'active' cho container inputs
+        dateRangeInputs.classList.toggle('active');
+
+        // Thay đổi nội dung nút giữa "+" và "×"
+        toggleButton.textContent = toggleButton.classList.contains('active') ? '×' : '↓';
+      });
+    });
     // Khởi tạo Pikaday
     function initializePikaday(input, updateCallback = null) {
       let isUpdating = false;
@@ -560,6 +623,7 @@
       e.preventDefault();
       const formData = new FormData(this);
       const data = Object.fromEntries(formData.entries());
+      data.ngay = data.ngay.toString();
       if (!data.ngay) {
         alert("Vui lòng chọn hoặc nhập ngày hợp lệ theo định dạng dd/mm/yyyy (ví dụ: 25/12/2025).");
         return;
