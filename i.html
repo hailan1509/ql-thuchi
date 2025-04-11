@@ -17,8 +17,12 @@
 
     .header {
       text-align: center;
-      margin-bottom: 30px;
-      color: #333;
+      color: #1a73e8;
+      font-weight: 700;
+      margin-bottom: 20px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.1);
     }
 
     .money-total {
@@ -77,9 +81,10 @@
 
     @media (max-width: 768px) {
       .btn-add {
-        width: 50px;
-        height: 50px;
+        width: 60px;
+        height: 60px;
         font-size: 22px;
+        font-weight: bold;
       }
 
       .item-card {
@@ -104,7 +109,7 @@
     </div>
   </div>
   <div class="container">
-    <h2 class="header">Quản Lý Chi Tiêu Hàng Tháng</h2>
+    <h2 class="header">THU CHI ĐÌNH TÂN KIM</h2>
 
     <div class="search-box">
       <input type="text" id="searchInput" class="form-control" placeholder="Tìm kiếm nội dung hoặc ghi chú...">
@@ -114,7 +119,9 @@
 
     <div id="listContainer"></div>
     <nav>
-      <ul class="pagination mt-3" id="pagination"></ul>
+      <div class="d-flex justify-content-center">
+        <ul class="pagination mt-3" id="pagination"></ul>
+      </div>
     </nav>
   </div>
 
@@ -133,22 +140,27 @@
         </div>
         <div class="modal-body">
           <div class="mb-2">
-            <input type="text" name="noidung" class="form-control" placeholder="Nội dung" required autocomplete="off">
+            <span><b>Nội dung: </b></span>
+            &nbsp;<textarea  name="noidung" class="form-control" placeholder="Nội dung" required autocomplete="off"></textarea>
           </div>
           <div class="mb-2">
-            <input type="number" name="sotien" class="form-control" placeholder="Số tiền" required autocomplete="off">
+            <span><b>Số tiền: </b></span>
+            &nbsp;<input type="number" name="sotien" class="form-control" placeholder="Số tiền" required autocomplete="off">
           </div>
           <div class="mb-2">
-            <input type="text" name="ghichu" class="form-control" placeholder="Ghi chú">
+            <span><b>Ghi chú: </b></span>
+            &nbsp;<textarea name="ghichu" class="form-control" placeholder="Ghi chú"></textarea>
           </div>
           <div class="mb-2">
-            <input type="text" name="ngay_display" class="form-control datepicker" placeholder="Ngày (dd/mm/yyyy)" required autocomplete="off">
+            <span><b>Ngày: </b></span>
+            &nbsp;<input type="text" name="ngay_display" class="form-control datepicker" placeholder="Ngày (dd/mm/yyyy)" required autocomplete="off">
             <input type="hidden" name="ngay">
           </div>
           <div class="mb-2">
-            <select name="loai" class="form-control">
-              <option value="thu">Thu</option>
+            <span><b>Loại: </b></span>
+            &nbsp;<select name="loai" class="form-control">
               <option value="chi">Chi</option>
+              <option value="thu">Thu</option>
             </select>
           </div>
         </div>
@@ -171,6 +183,7 @@
         </div>
         <div class="modal-body">
           <div class="mb-2">
+            <span><b>Nội dung: </b></span>
             <input type="text" name="noidung" class="form-control" placeholder="Nội dung" required autocomplete="off">
           </div>
           <div class="mb-2">
@@ -185,8 +198,8 @@
           </div>
           <div class="mb-2">
             <select name="loai" class="form-control">
-              <option value="thu">Thu</option>
               <option value="chi">Chi</option>
+              <option value="thu">Thu</option>
             </select>
           </div>
         </div>
@@ -321,23 +334,29 @@
 
       const container = document.getElementById("listContainer");
       container.innerHTML = "";
+      if (pageData.length == 0) {
+        const div = document.createElement("div");
+        div.innerHTML = `<p class="text-danger text-center"><i>Không có dữ liệu</i></p>`;
+        container.appendChild(div);
+        return;
+      }
       pageData.forEach(item => {
         const div = document.createElement("div");
         div.className = `card item-card p-3 border-start-${item.loai === 'chi' ? 'danger' : 'success'}`;
         div.innerHTML = `
           <div class="d-flex justify-content-between align-items-start">
             <div>
-              <h6 class="mb-1">${item.noidung}</h6>
+              <h6 class="mb-1 ${item.loai === 'chi' ? 'text-danger' : 'text-success'}">${item.noidung}</h6>
               <div class="mb-1">
                 <span class="${item.loai === 'chi' ? 'text-danger' : 'text-success'} fw-bold">
-                  ${parseInt(item.sotien).toLocaleString()} đ
+                  ${item.loai === 'chi' ? '-' : '+'}${parseInt(item.sotien).toLocaleString()} VNĐ
                 </span>
               </div>
-              <small class="text-muted">${item.ngayDisplay} ${item.ghichu ? ' - ' + item.ghichu : ''}</small>
+              <small class="text-muted"><i>${item.ngayDisplay}</i> ${item.ghichu ? ' - ' + item.ghichu : ''}</small>
             </div>
             <div>
-              <button class="btn btn-sm btn-outline-primary me-1" onclick='editItem(${JSON.stringify(item)})'>Sửa</button>
-              <button class="btn btn-sm btn-outline-danger" onclick='deleteItem(${item.row})'>Xoá</button>
+              <button class="btn btn-sm btn-outline-primary me-1 mt-1" onclick='editItem(${JSON.stringify(item)})'>Sửa</button>
+              <button class="btn btn-sm btn-outline-danger mt-1" onclick='deleteItem(${item.row})'>Xoá</button>
             </div>
           </div>
         `;
