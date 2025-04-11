@@ -107,6 +107,67 @@
     .text-muted {
       font-size: 16px !important;
     }
+    .page-item a{
+      padding:10px 20px !important;
+    }
+    .pikaday__input {
+      background: #fff;
+      border: 1px solid #ced4da;
+      border-radius: 0.25rem;
+      padding: 0.375rem 0.75rem;
+      width: 100%;
+    }
+
+    .date-range-search {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-top: 10px;
+      overflow: hidden;
+    }
+
+    .date-range-toggle {
+      width: 30px;
+      height: 30px;
+      font-size: 18px;
+      padding: 0;
+      border-radius: 50%;
+      flex-shrink: 0;
+      transition: transform 0.3s ease;
+    }
+
+    .date-range-toggle.active {
+      transform: rotate(45deg); /* Xoay nút + thành x khi mở */
+    }
+
+    .date-range-inputs {
+      display: flex;
+      gap: 10px;
+      max-width: 0;
+      opacity: 0;
+      transition: max-width 0.3s ease, opacity 0.2s ease;
+    }
+
+    .date-range-inputs.active {
+      max-width: 400px; /* Đủ rộng để chứa 2 input */
+      opacity: 1;
+    }
+
+    .date-range-inputs input {
+      flex: 1;
+      min-width: 0; /* Ngăn input bị co quá nhỏ */
+    }
+
+    @media (max-width: 576px) {
+      .date-range-inputs {
+        flex-direction: column;
+        gap: 5px;
+      }
+
+      .date-range-inputs.active {
+        max-width: 100%;
+      }
+    }
   </style>
 </head>
 <body>
@@ -120,7 +181,14 @@
     <h2 class="header">THU CHI ĐÌNH TÂN KIM</h2>
 
     <div class="search-box">
-      <input type="text" id="searchInput" class="form-control" placeholder="Tìm kiếm nội dung hoặc ghi chú...">
+      <input type="text" id="searchInput" class="form-control mb-2" placeholder="Tìm kiếm nội dung hoặc ghi chú...">
+      <div class="date-range-search">
+        <button type="button" class="btn btn-outline-primary date-range-toggle">+</button>
+        <div class="date-range-inputs">
+          <input type="text" id="dateFrom" class="form-control datepicker" placeholder="Từ ngày (dd/mm/yyyy)">
+          <input type="text" id="dateTo" class="form-control datepicker" placeholder="Đến ngày (dd/mm/yyyy)">
+        </div>
+      </div>
     </div>
 
     <div class="money-total" id="tongTien">Tổng tiền: Đang tải...</div>
@@ -227,11 +295,12 @@
   <script src="https://cdn.jsdelivr.net/npm/pikaday@1.8.2/pikaday.min.js"></script>
   <script>
     const SHEET_URL = "https://script.google.com/macros/s/AKfycbzQL-tBgrAsDloSj8f-14CQTb3A2Dx44HCDW1qyglzDc7MK_47CRM1MXZBGs_ycW97i/exec";
-    let dataList = [], filteredList = [], currentPage = 1, perPage = 5;
+    let dataList = [], filteredList = [], currentPage = 1, perPage = 5; dataReal = [];
 
     // Khởi tạo Pikaday
-    document.querySelectorAll(".datepicker").forEach(input => {
-      let isUpdating = false; // Cờ để ngăn vòng lặp
+    // Khởi tạo Pikaday
+    function initializePikaday(input, updateCallback = null) {
+      let isUpdating = false;
       const picker = new Pikaday({
         field: input,
         format: "DD/MM/YYYY",
@@ -250,39 +319,50 @@
           return null;
         },
         onSelect(date) {
-          if (isUpdating) return; // Ngăn gọi lại khi đang cập nhật
+          if (isUpdating) return;
           isUpdating = true;
           const isoDate = moment(date).format("YYYY-MM-DD");
-          input.closest(".mb-2").querySelector("[name=ngay]").value = isoDate;
+          const hiddenInput = input.closest(".mb-2")?.querySelector("[name=ngay]");
+          if (hiddenInput) hiddenInput.value = isoDate;
           input.value = this.toString(date);
+          if (updateCallback) updateCallback();
           isUpdating = false;
         }
       });
 
       input._pikaday = picker;
 
-      // Xử lý nhập tay
       input.addEventListener("change", function() {
-        if (isUpdating) return; // Ngăn xử lý khi Pikaday đang cập nhật
+        if (isUpdating) return;
         isUpdating = true;
         const value = this.value;
         if (value && !/^\d{2}\/\d{2}\/\d{4}$/.test(value)) {
           alert("Vui lòng nhập ngày theo định dạng dd/mm/yyyy (ví dụ: 25/12/2025).");
           this.value = "";
-          this.closest(".mb-2").querySelector("[name=ngay]").value = "";
+          const hiddenInput = this.closest(".mb-2")?.querySelector("[name=ngay]");
+          if (hiddenInput) hiddenInput.value = "";
+          if (updateCallback) updateCallback();
         } else if (value) {
           const date = moment(value, "DD/MM/YYYY", true);
           if (!date.isValid()) {
             alert("Ngày không hợp lệ. Vui lòng nhập lại (ví dụ: 25/12/2025).");
             this.value = "";
-            this.closest(".mb-2").querySelector("[name=ngay]").value = "";
+            const hiddenInput = this.closest(".mb-2")?.querySelector("[name=ngay]");
+            if (hiddenInput) hiddenInput.value = "";
+            if (updateCallback) updateCallback();
           } else {
-            this.closest(".mb-2").querySelector("[name=ngay]").value = date.format("YYYY-MM-DD");
-            this._pikaday.setDate(date.toDate(), true); // true để không kích hoạt onSelect
+            const hiddenInput = this.closest(".mb-2")?.querySelector("[name=ngay]");
+            if (hiddenInput) hiddenInput.value = date.format("YYYY-MM-DD");
+            this._pikaday.setDate(date.toDate(), true);
+            if (updateCallback) updateCallback();
           }
         }
         isUpdating = false;
       });
+    }
+
+    document.querySelectorAll(".datepicker").forEach(input => {
+      initializePikaday(input, input.id === "dateFrom" || input.id === "dateTo" ? updateFilter : null);
     });
 
     function showLoading() {
@@ -308,7 +388,8 @@
           ...item,
           ngayDisplay: formatDateToDisplay(item.ngay)
         }));
-        filteredList = [...dataList];
+        dataReal = filteredList = [...dataList].reverse();
+        filteredList = [...dataList].reverse();
         renderList();
         renderPagination();
         updateTotal();
@@ -339,6 +420,7 @@
     }
 
     function renderList() {
+      showLoading();
       const start = (currentPage - 1) * perPage;
       const pageData = filteredList.slice(start, start + perPage);
 
@@ -348,6 +430,7 @@
         const div = document.createElement("div");
         div.innerHTML = `<p class="text-danger text-center"><i>Không có dữ liệu</i></p>`;
         container.appendChild(div);
+        hideLoading();
         return;
       }
       pageData.forEach(item => {
@@ -372,6 +455,7 @@
         `;
         container.appendChild(div);
       });
+      hideLoading();
     }
 
     function renderPagination() {
@@ -431,17 +515,46 @@
       }
     }
 
+    function parseDateToISO(dateStr) {
+      if (!dateStr || !/^\d{2}\/\d{2}\/\d{4}$/.test(dateStr)) return null;
+      const date = moment(dateStr, "DD/MM/YYYY", true);
+      return date.isValid() ? date.format("YYYY-MM-DD") : null;
+    }
 
-    document.getElementById("searchInput").addEventListener("input", function() {
-      const keyword = this.value.toLowerCase();
-      filteredList = dataList.filter(item =>
-        item.noidung.toLowerCase().includes(keyword) || (item.ghichu || '').toLowerCase().includes(keyword)
-      );
+    function updateFilter() {
+      const keyword = document.getElementById("searchInput").value.toLowerCase();
+      const dateFrom = parseDateToISO(document.getElementById("dateFrom").value);
+      const dateTo = parseDateToISO(document.getElementById("dateTo").value);
+
+      filteredList = dataList.filter(item => {
+        const matchesKeyword = item.noidung.toLowerCase().includes(keyword) || 
+                             (item.ghichu || '').toLowerCase().includes(keyword);
+        const itemDate = item.ngay;
+        const afterFrom = !dateFrom || itemDate >= dateFrom;
+        const beforeTo = !dateTo || itemDate <= dateTo;
+        return matchesKeyword && afterFrom && beforeTo;
+      });
+
       currentPage = 1;
       renderList();
       renderPagination();
       updateTotal();
-    });
+    }
+
+    // document.getElementById("searchInput").addEventListener("input", function() {
+    //   const keyword = this.value.toLowerCase();
+    //   filteredList = dataList.filter(item =>
+    //     item.noidung.toLowerCase().includes(keyword) || (item.ghichu || '').toLowerCase().includes(keyword)
+    //   );
+    //   currentPage = 1;
+    //   renderList();
+    //   renderPagination();
+    //   updateTotal();
+    // });
+
+    document.getElementById("searchInput").addEventListener("input", updateFilter);
+    document.getElementById("dateFrom").addEventListener("change", updateFilter);
+    document.getElementById("dateTo").addEventListener("change", updateFilter);
 
     document.getElementById("addForm").addEventListener("submit", async function(e) {
       e.preventDefault();
@@ -479,6 +592,8 @@
       form.querySelector("[name=ngay_display]").value = item.ngayDisplay;
       form.querySelector("[name=ngay]").value = item.ngay;
       form.querySelector("[name=loai]").value = item.loai;
+      const moneyDisplay = document.getElementById('moneyDisplayEdit');
+      moneyDisplay.innerHTML = `Số tiền bạn đã nhập: <b>${new Intl.NumberFormat().format(item.sotien)} VNĐ</b>`;
       const picker = form.querySelector(".datepicker")._pikaday;
       if (picker) {
         picker.setDate(moment(item.ngay, "YYYY-MM-DD").toDate(), true); // true để không kích hoạt onSelect
