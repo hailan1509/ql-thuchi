@@ -60,15 +60,17 @@
   </div>
 
 <script>
-const SHEET_URL = "https://script.google.com/macros/s/AKfycbyZTx8QyNuHHLw0nUwO3i8wjBprQMbYhzw9PN1PGm3JEfoOCLWObX5YAVsKWMSLXFT3/exec";
+const SHEET_URL = "https://script.google.com/macros/s/AKfycbxIYz_6iIXP8KeZyfFAx5z_xNqry7B69sJ4eTPc-CiQyx1RipYxww7XryMqw68KW_Qv/exec";
 let bootstrapModal;
 const denominations = [500, 1000, 2000, 5000, 10000, 20000, 50000, 100000, 200000, 500000];
+
+var currentData = [];
 
 function createMoneyInputs(data = {}) {
   const container = document.getElementById("moneyList");
   container.innerHTML = "";
   denominations.forEach(val => {
-    const quantity = data[val] || "";
+    const quantity = data[val].so_to || "";
     const col = document.createElement("div");
     col.className = "col-md-4";
     col.innerHTML = `
@@ -86,7 +88,11 @@ function openModal(data = null) {
   if (data?.id) {
     fetch(`${SHEET_URL}?action=getDetail&id=${data?.id}`).then(res => res.json())
     .then(dt => {
-      data.chi_tiet = dt;
+      let rs = {};
+      dt.forEach(i => {
+        rs[i.loai_tien] = i
+      })
+      data.chi_tiet = rs;
       createMoneyInputs(data?.chi_tiet || {});
       bootstrapModal = new bootstrap.Modal(document.getElementById('dataModal'));
       bootstrapModal.show();
@@ -97,6 +103,7 @@ function openModal(data = null) {
       bootstrapModal = new bootstrap.Modal(document.getElementById('dataModal'));
       bootstrapModal.show();
   }
+  currentData = data;
 }
 
 function fetchData() {
@@ -123,17 +130,27 @@ function fetchData() {
 
 function submitData() {
   const id = document.getElementById("editId").value || Date.now().toString();
+  const isAdd = document.getElementById("editId").value ? false : true;
+  console.log(id, document.getElementById("editId").value)
+
+  // return ;
   const ngay = document.getElementById("ngay").value;
   const nguoi = document.getElementById("nguoi").value;
 
-  let chi_tiet = {};
+  let chi_tiet = [];
   let tong_tien = 0;
   let so_luong_to_tien = 0;
 
   denominations.forEach(val => {
     const quantity = parseInt(document.getElementById(`money_${val}`).value || 0);
+    let item = {
+      id: isAdd ? 0 : currentData.chi_tiet.id,
+      loai_tien: val,
+      so_to: quantity,
+      id_hom_cong_duc: isAdd ? 0 : currentData.chi_tiet.id_hom_cong_duc,
+    }
+    chi_tiet.push(item);
     if (quantity > 0) {
-      chi_tiet[val] = quantity;
       tong_tien += quantity * val;
       so_luong_to_tien += quantity;
     }
@@ -141,7 +158,7 @@ function submitData() {
 
   const data = {
     id, ngay_kiem_tra: ngay, nguoi_kiem: nguoi, chi_tiet,
-    tong_tien, so_luong_to_tien, method: 'add'
+    tong_tien, tong_so_to: so_luong_to_tien, method: !isAdd ? 'edit' : 'add'
   };
 
   fetch(SHEET_URL, {
