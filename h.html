@@ -1,55 +1,405 @@
-<!-- index.html -->
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Quản lý Hòm Công Đức</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/>
+  <link href="https://cdn.jsdelivr.net/npm/pikaday@1.8.2/css/pikaday.css" rel="stylesheet"/>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet"/>
+  <style>
+    body {
+      background: #f8f9fa;
+      font-family: 'Inter', sans-serif;
+      padding: 20px;
+    }
+
+    .navbar-nav .nav-link {
+    position: relative;
+    transition: color 0.3s ease;
+  }
+
+  .navbar-nav .nav-link.hover-underline::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 10%;
+    width: 80%;
+    height: 2px;
+    background-color: #0d6efd; /* Primary color */
+    transform: scaleX(0);
+    transform-origin: center;
+    transition: transform 0.3s ease;
+  }
+
+  .navbar-nav .nav-link.hover-underline:hover::after {
+    transform: scaleX(1);
+  }
+
+  .navbar-nav .nav-link:hover {
+    color: #0d6efd !important;
+  }
+
+    .container {
+      max-width: 900px;
+      padding: 15px 10px;
+    }
+
+    /* Card styles */
+    .card-container {
+      max-width: 100%;
+      margin: 0 auto;
+      padding: 0 8px;
+    }
+
+    .side-by-side {
+      background: #ffffff;
+      border: 1px solid #e9ecef;
+      border-radius: 8px;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .side-by-side:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    }
+
+    .card-inner {
+      padding: 12px;
+      display: flex;
+      flex-direction: row;
+    }
+
+    .info-section {
+      flex: 1;
+      min-width: 0;
+      padding-right: 12px;
+    }
+
+    .date-badge {
+      background: linear-gradient(45deg, #4dabf7, #74c0fc);
+      color: white;
+      padding: 3px 8px;
+      border-radius: 6px;
+      font-size: 0.8rem;
+      display: inline-flex;
+      align-items: center;
+    }
+
+    .text-success {
+      font-weight: 600;
+      font-size: 1.2rem;
+    }
+
+    .text-secondary {
+      font-size: 0.85rem;
+    }
+
+    .action-section {
+      flex: 0 0 auto;
+      min-width: 100px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .btn-edit, .btn-delete {
+      padding: 8px;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      transition: background-color 0.2s, color 0.2s;
+      text-align: center;
+    }
+
+    .btn-edit {
+      background-color: #fff4e6;
+      border: 1px solid #ff922b;
+      color: #5c3c00;
+    }
+
+    .btn-edit:hover {
+      background-color: #ff922b;
+      color: #fff;
+    }
+
+    .btn-delete {
+      background-color: #ffe3e3;
+      border: 1px solid #ff6b6b;
+      color: #5c2a2a;
+    }
+
+    .btn-delete:hover {
+      background-color: #ff6b6b;
+      color: #fff;
+    }
+
+    /* Floating Action Button */
+    .fab {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      width: 56px;
+      height: 56px;
+      background: linear-gradient(45deg, #4dabf7, #74c0fc);
+      color: white;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+      transition: transform 0.2s, box-shadow 0.2s;
+      z-index: 1000;
+    }
+
+    .fab:hover {
+      transform: scale(1.1);
+      box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
+    }
+
+    /* Modal styles */
+    .modal-content {
+      border-radius: 10px;
+      background: linear-gradient(145deg, #ffffff, #f8f9fa);
+    }
+
+    .modal-header {
+      border-bottom: 1px solid #e9ecef;
+      background: #f1f3f5;
+    }
+
+    .modal-body {
+      padding: 15px;
+    }
+
+    .form-control {
+      border-radius: 6px;
+      font-size: 0.85rem;
+    }
+
+    .form-control:focus {
+      border-color: #4dabf7;
+      box-shadow: 0 0 0 0.2rem rgba(77, 171, 247, 0.25);
+    }
+
+    .money-input label {
+      font-weight: 500;
+      color: #495057;
+      font-size: 0.85rem;
+    }
+
+    /* Pagination styles */
+    .pagination .page-link {
+      border-radius: 6px;
+      margin: 0 3px;
+      font-size: 0.85rem;
+      padding: 8px 12px;
+      transition: background-color 0.2s, color 0.2s;
+    }
+
+    .pagination .page-item.active .page-link {
+      background-color: #4dabf7;
+      border-color: #4dabf7;
+    }
+
+    .pagination .page-link:hover {
+      background-color: #e9ecef;
+    }
+
+    /* Spinner */
+    .spinner-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.3);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+    }
+
+    .spinner {
+      width: 36px;
+      height: 36px;
+      border: 4px solid #f3f3f3;
+      border-top: 4px solid #4dabf7;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    /* Responsive for mobile */
+    @media (max-width: 576px) {
+      body {
+        padding-bottom: 90px;
+      }
+
+      .container {
+        padding: 10px 8px;
+      }
+
+      .card-inner {
+        flex-direction: column;
+        padding: 10px;
+      }
+
+      .info-section {
+        padding-right: 0;
+        margin-bottom: 8px;
+      }
+
+      .action-section {
+        flex-direction: row;
+        min-width: auto;
+        width: 100%;
+        gap: 8px;
+      }
+
+      .btn-edit, .btn-delete {
+        flex: 1;
+        padding: 10px;
+        font-size: 0.8rem;
+        min-height: 44px; /* Touch-friendly */
+      }
+
+      .date-badge {
+        font-size: 1rem;
+        font-weight: bold;
+        padding: 2px 6px;
+      }
+
+      .text-success {
+        font-size: 1rem;
+      }
+
+      .text-secondary {
+        font-size: 0.8rem;
+      }
+
+      .modal-body {
+        padding: 12px;
+      }
+
+      .modal-dialog {
+        margin: 8px;
+      }
+
+      .form-control {
+        font-size: 0.8rem;
+        padding: 8px;
+      }
+
+      .money-input {
+        margin-bottom: 8px;
+      }
+
+      .money-input label {
+        font-size: 0.8rem;
+      }
+
+      .modal-footer .btn {
+        font-size: 0.8rem;
+        padding: 8px 16px;
+      }
+
+      .pagination .page-link {
+        padding: 6px 10px;
+        font-size: 0.8rem;
+      }
+
+      .fab {
+        width: 70px;
+        height: 70px;
+        bottom: 15px;
+        right: 15px;
+      }
+
+      .fab i {
+        font-size: 2rem;
+      }
+
+      /* Adjust Pikaday for mobile */
+      .pikaday__container {
+        font-size: 0.8rem;
+      }
+
+      .pikaday__day {
+        padding: 4px;
+      }
+    }
+  </style>
 </head>
-<body class="p-3">
-  <div class="container">
-    <h2 class="mb-3">Danh sách Hòm Công Đức</h2>
-    <button class="btn btn-primary mb-3" onclick="openModal()">+ Thêm mới</button>
-    <table class="table table-bordered">
-      <thead>
-        <tr>
-          <th>Ngày kiểm tra</th>
-          <th>Tổng tiền</th>
-          <th>Số lượng tờ tiền</th>
-          <th>Người kiểm</th>
-          <th>Hành động</th>
-        </tr>
-      </thead>
-      <tbody id="dataBody"></tbody>
-    </table>
+<body>
+  <div class="spinner-overlay" id="spinner">
+    <div class="spinner"></div>
   </div>
+
+  <nav class="navbar navbar-expand-lg navbar-light shadow-sm bg-white py-3 sticky-top">
+    <div class="container">
+      <a class="navbar-brand fw-bold text-primary" href="#">💰HÒM CÔNG ĐỨC</a>
+      <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#mainNavbar"
+        aria-controls="mainNavbar" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+  
+      <div class="collapse navbar-collapse justify-content-end" id="mainNavbar">
+        <ul class="navbar-nav">
+          <li class="nav-item mx-2">
+            <a class="nav-link text-dark fw-semibold hover-underline" href="i.html">Thu - Chi</a>
+          </li>
+          <li class="nav-item mx-2">
+            <a class="nav-link text-dark fw-semibold hover-underline" href="h.html">Hòm công đức</a>
+          </li>
+          <li class="nav-item mx-2">
+            <a class="nav-link text-dark fw-semibold hover-underline" href="#">Thống kê</a>
+          </li>
+          <li class="nav-item mx-2">
+            <a class="nav-link text-dark fw-semibold hover-underline" href="#">Cài đặt</a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <div class="container">
+    <div id="dataBody" class="row g-2" style="margin-top: 15px;"></div>
+    <nav>
+      <ul class="pagination justify-content-center mt-4" id="pagination"></ul>
+    </nav>
+  </div>
+
+  <!-- Floating Action Button -->
+  <button class="fab" onclick="openModal()">
+    <i class="bi bi-plus-lg"></i>
+  </button>
 
   <!-- Modal -->
   <div class="modal fade" id="dataModal" tabindex="-1">
     <div class="modal-dialog modal-lg">
       <div class="modal-content">
         <div class="modal-header">
-          <h5 class="modal-title">Thêm / Sửa Hòm Công Đức</h5>
+          <h5 class="modal-title fw-bold">Thêm / Sửa</h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
         </div>
         <div class="modal-body">
           <input type="hidden" id="editId">
           <div class="row">
-            <div class="col-md-6 mb-2">
-              <label>Ngày kiểm tra</label>
-              <input id="ngay" class="form-control">
+            <div class="col-12 mb-3">
+              <label class="form-label fw-medium">Ngày kiểm tra</label>
+              <input id="ngay" class="form-control datepicker" placeholder="dd/mm/yyyy" autocomplete="off">
             </div>
-            <div class="col-md-6 mb-2">
-              <label>Người kiểm</label>
-              <input id="nguoi" class="form-control">
+            <div class="col-12 mb-3">
+              <label class="form-label fw-medium">Người kiểm</label>
+              <input id="nguoi" class="form-control" placeholder="Nhập tên người kiểm">
             </div>
           </div>
-
-          <h5 class="mt-3">Chi tiết Hòm Công Đức</h5>
-          <div id="moneyList" class="row g-2">
-            <!-- Dynamically filled -->
-          </div>
+          <h5 class="mt-3 mb-3 fw-bold">Chi tiết Hòm Công Đức</h5>
+          <div id="moneyList" class="row g-2"></div>
         </div>
         <div class="modal-footer">
           <button class="btn btn-primary" onclick="submitData()">Lưu</button>
@@ -59,128 +409,272 @@
     </div>
   </div>
 
-<script>
-const SHEET_URL = "https://script.google.com/macros/s/AKfycbxIYz_6iIXP8KeZyfFAx5z_xNqry7B69sJ4eTPc-CiQyx1RipYxww7XryMqw68KW_Qv/exec";
-let bootstrapModal;
-const denominations = [500, 1000, 2000, 5000, 10000, 20000, 50000, 100000, 200000, 500000];
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/moment@2.29.4/moment.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/pikaday@1.8.2/pikaday.min.js"></script>
+  <script>
+    const SHEET_URL = "https://script.google.com/macros/s/AKfycbybFAN8oTWec8y9P8NOXLLJMObxC7m8SQT39Pgfg8OSL3O3q2dIEi3PHyykDkW_nIOZ/exec";
+    const denominations = [500, 1000, 2000, 5000, 10000, 20000, 50000, 100000, 200000, 500000];
 
-var currentData = [];
+    let allData = [], currentData = [];
+    let currentPage = 1, perPage = 5, bootstrapModal;
 
-function createMoneyInputs(data = {}) {
-  const container = document.getElementById("moneyList");
-  container.innerHTML = "";
-  denominations.forEach(val => {
-    const quantity = data[val].so_to || "";
-    const col = document.createElement("div");
-    col.className = "col-md-4";
-    col.innerHTML = `
-      <label>${val.toLocaleString()}đ</label>
-      <input type="number" min="0" class="form-control" id="money_${val}" value="${quantity}">
-    `;
-    container.appendChild(col);
-  });
-}
+    // Khởi tạo Pikaday
+    function initializePikaday(input, updateCallback = null) {
+      let isUpdating = false;
+      const picker = new Pikaday({
+        field: input,
+        format: "DD/MM/YYYY",
+        toString(date) {
+          const day = String(date.getDate()).padStart(2, "0");
+          const month = String(date.getMonth() + 1).padStart(2, "0");
+          const year = date.getFullYear();
+          return `${day}/${month}/${year}`;
+        },
+        parse(dateString) {
+          const parts = dateString.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+          if (parts) {
+            const [_, day, month, year] = parts;
+            return new Date(year, month - 1, day);
+          }
+          return null;
+        },
+        onSelect(date) {
+          if (isUpdating) return;
+          isUpdating = true;
+          const isoDate = moment(date).format("YYYY-MM-DD");
+          const hiddenInput = input.closest(".mb-2")?.querySelector("[name=ngay]");
+          if (hiddenInput) hiddenInput.value = isoDate;
+          input.value = this.toString(date);
+          if (updateCallback) updateCallback();
+          isUpdating = false;
+        }
+      });
 
-function openModal(data = null) {
-  document.getElementById("editId").value = data?.id || "";
-  document.getElementById("ngay").value = data?.ngay_kiem_tra || "";
-  document.getElementById("nguoi").value = data?.nguoi_kiem || "";
-  if (data?.id) {
-    fetch(`${SHEET_URL}?action=getDetail&id=${data?.id}`).then(res => res.json())
-    .then(dt => {
-      let rs = {};
-      dt.forEach(i => {
-        rs[i.loai_tien] = i
-      })
-      data.chi_tiet = rs;
-      createMoneyInputs(data?.chi_tiet || {});
-      bootstrapModal = new bootstrap.Modal(document.getElementById('dataModal'));
-      bootstrapModal.show();
-    })
-  }
-  else {
-      createMoneyInputs(data?.chi_tiet || {});
-      bootstrapModal = new bootstrap.Modal(document.getElementById('dataModal'));
-      bootstrapModal.show();
-  }
-  currentData = data;
-}
+      input._pikaday = picker;
 
-function fetchData() {
-  fetch(`${SHEET_URL}?action=list`)
-    .then(res => res.json())
-    .then(data => {
+      input.addEventListener("change", function() {
+        if (isUpdating) return;
+        isUpdating = true;
+        const value = this.value;
+        if (value && !/^\d{2}\/\d{2}\/\d{4}$/.test(value)) {
+          alert("Vui lòng nhập ngày theo định dạng dd/mm/yyyy (ví dụ: 25/12/2025).");
+          this.value = "";
+          const hiddenInput = this.closest(".mb-2")?.querySelector("[name=ngay]");
+          if (hiddenInput) hiddenInput.value = "";
+          if (updateCallback) updateCallback();
+        } else if (value) {
+          const date = moment(value, "DD/MM/YYYY", true);
+          if (!date.isValid()) {
+            alert("Ngày không hợp lệ. Vui lòng nhập lại (ví dụ: 25/12/2025).");
+            this.value = "";
+            const hiddenInput = this.closest(".mb-2")?.querySelector("[name=ngay]");
+            if (hiddenInput) hiddenInput.value = "";
+            if (updateCallback) updateCallback();
+          } else {
+            const hiddenInput = this.closest(".mb-2")?.querySelector("[name=ngay]");
+            if (hiddenInput) hiddenInput.value = date.format("YYYY-MM-DD");
+            this._pikaday.setDate(date.toDate(), true);
+            if (updateCallback) updateCallback();
+          }
+        }
+        isUpdating = false;
+      });
+    }
+
+    document.querySelectorAll(".datepicker").forEach(input => {
+      initializePikaday(input, input.id != "ngay" ? updateFilter : null);
+    });
+
+    function updateFilter() {
+      fetchData();
+    }
+
+    function showSpinner(show) {
+      document.getElementById('spinner').style.display = show ? 'flex' : 'none';
+    }
+
+    function createMoneyInputs(data = {}) {
+      const container = document.getElementById("moneyList");
+      container.innerHTML = "";
+      denominations.forEach(val => {
+        const quantity = data[val]?.so_to || "";
+        container.innerHTML += `
+          <div class="col-4 col-md-4 money-input">
+            <label class="form-label">${val.toLocaleString()}đ</label>
+            <input type="number" min="0" class="form-control" id="money_${val}" value="${quantity}" placeholder="Số tờ">
+          </div>`;
+      });
+    }
+
+    function openModal(data = null) {
+      document.getElementById("editId").value = data?.id || "";
+      document.getElementById("ngay").value = data?.ngay_kiem_tra || "";
+      document.getElementById("nguoi").value = data?.nguoi_kiem || "";
+      if (data?.id) {
+        showSpinner(true);
+        fetch(`${SHEET_URL}?action=getDetail&id=${data.id}`)
+          .then(res => res.json())
+          .then(dt => {
+            let rs = {};
+            dt.forEach(i => rs[i.loai_tien] = i);
+            data.chi_tiet = rs;
+            createMoneyInputs(data.chi_tiet);
+            bootstrapModal = new bootstrap.Modal(document.getElementById('dataModal'));
+            bootstrapModal.show();
+          })
+          .finally(() => showSpinner(false));
+      } else {
+        createMoneyInputs();
+        bootstrapModal = new bootstrap.Modal(document.getElementById('dataModal'));
+        bootstrapModal.show();
+      }
+      currentData = data;
+    }
+
+    function renderData() {
       const body = document.getElementById("dataBody");
       body.innerHTML = "";
-      data.forEach(row => {
-        body.innerHTML += `
-          <tr>
-            <td>${row.ngay_kiem_tra}</td>
-            <td>${row.tong_tien.toLocaleString()}đ</td>
-            <td>${row.so_luong_to_tien}</td>
-            <td>${row.nguoi_kiem}</td>
-            <td>
-              <button class='btn btn-sm btn-warning' onclick='openModal(${JSON.stringify(row)})'>Sửa</button>
-              <button class='btn btn-sm btn-danger' onclick='deleteData("${row.id}")'>Xoá</button>
-            </td>
-          </tr>`;
+      const start = (currentPage - 1) * perPage;
+      const paginated = allData.slice(start, start + perPage);
+
+      const html = paginated.map(row => `
+        <div class="card-container mb-3">
+          <div class="card side-by-side shadow-sm h-100">
+            <div class="card-inner">
+              <div class="info-section">
+                <div class="d-flex align-items-center mb-2">
+                  <span class="date-badge me-2">
+                    <i class="bi bi-calendar3 me-1"></i>${row.ngay_kiem_tra}
+                  </span>
+                  <small class="text-muted"><i>Người kiểm: ${row.nguoi_kiem}</i></small>
+                </div>
+                <h5 class="text-success mb-1"> <small class="text-muted">Tổng thu:</small>  ${row.tong_tien.toLocaleString()} đ</h5>
+                <p class="text-secondary mb-0">
+                  <i class="bi bi-wallet2 me-1"></i>${row.so_luong_to_tien} tờ tiền
+                </p>
+              </div>
+              <div class="action-section">
+                <button class="btn btn-edit" onclick='openModal(${JSON.stringify(row)})'>
+                  <i class="bi bi-pencil-square me-1"></i>Sửa
+                </button>
+                <button class="btn btn-delete" onclick='deleteData(${JSON.stringify(row)})'>
+                  <i class="bi bi-trash3 me-1"></i>Xoá
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      `).join('');
+      body.innerHTML = html;
+
+      renderPagination();
+    }
+
+    function renderPagination() {
+      const totalPages = Math.ceil(allData.length / perPage);
+      const pagination = document.getElementById("pagination");
+      pagination.innerHTML = "";
+
+      const createPage = (num, active = false) => {
+        return `<li class="page-item ${active ? "active" : ""}">
+          <a class="page-link" href="#" onclick="changePage(${num})">${num}</a></li>`;
+      };
+
+      if (totalPages <= 7) {
+        for (let i = 1; i <= totalPages; i++) {
+          pagination.innerHTML += createPage(i, i === currentPage);
+        }
+      } else {
+        pagination.innerHTML += createPage(1, 1 === currentPage);
+        if (currentPage > 3) pagination.innerHTML += `<li class="page-item disabled"><span class="page-link">...</span></li>`;
+
+        const start = Math.max(2, currentPage - 1);
+        const end = Math.min(totalPages - 1, currentPage + 1);
+        for (let i = start; i <= end; i++) {
+          pagination.innerHTML += createPage(i, i === currentPage);
+        }
+
+        if (currentPage < totalPages - 2) pagination.innerHTML += `<li class="page-item disabled"><span class="page-link">...</span></li>`;
+        pagination.innerHTML += createPage(totalPages, currentPage === totalPages);
+      }
+    }
+
+    function changePage(page) {
+      currentPage = page;
+      renderData();
+    }
+
+    function fetchData() {
+      showSpinner(true);
+      fetch(`${SHEET_URL}?action=list`)
+        .then(res => res.json())
+        .then(data => {
+          allData = data;
+          currentPage = 1;
+          renderData();
+        })
+        .finally(() => showSpinner(false));
+    }
+
+    function submitData() {
+      const id = document.getElementById("editId").value || Date.now().toString();
+      const isAdd = !document.getElementById("editId").value;
+      const ngay = document.getElementById("ngay").value;
+      const nguoi = document.getElementById("nguoi").value;
+
+      if (!ngay || !nguoi) {
+        alert("Vui lòng nhập đầy đủ ngày và người kiểm!");
+        return;
+      }
+
+      let chi_tiet = [];
+      let tong_tien = 0, so_luong_to_tien = 0;
+
+      denominations.forEach(val => {
+        const quantity = parseInt(document.getElementById(`money_${val}`).value || 0);
+        const item = {
+          id: isAdd ? 0 : currentData?.chi_tiet?.[val]?.id || 0,
+          loai_tien: val,
+          so_to: quantity,
+          id_hom_cong_duc: isAdd ? 0 : currentData?.chi_tiet?.[val]?.id_hom_cong_duc || 0,
+        };
+        chi_tiet.push(item);
+        if (quantity > 0) {
+          tong_tien += quantity * val;
+          so_luong_to_tien += quantity;
+        }
       });
-    });
-}
 
-function submitData() {
-  const id = document.getElementById("editId").value || Date.now().toString();
-  const isAdd = document.getElementById("editId").value ? false : true;
-  console.log(id, document.getElementById("editId").value)
+      const data = {
+        id, ngay_kiem_tra: ngay, nguoi_kiem: nguoi, chi_tiet,
+        tong_tien, tong_so_to: so_luong_to_tien, method: isAdd ? 'add' : 'edit'
+      };
 
-  // return ;
-  const ngay = document.getElementById("ngay").value;
-  const nguoi = document.getElementById("nguoi").value;
-
-  let chi_tiet = [];
-  let tong_tien = 0;
-  let so_luong_to_tien = 0;
-
-  denominations.forEach(val => {
-    const quantity = parseInt(document.getElementById(`money_${val}`).value || 0);
-    let item = {
-      id: isAdd ? 0 : currentData.chi_tiet.id,
-      loai_tien: val,
-      so_to: quantity,
-      id_hom_cong_duc: isAdd ? 0 : currentData.chi_tiet.id_hom_cong_duc,
+      showSpinner(true);
+      fetch(SHEET_URL, {
+        method: "POST",
+        body: JSON.stringify(data),
+      })
+        .then(() => {
+          bootstrapModal.hide();
+          fetchData();
+        })
+        .finally(() => showSpinner(false));
     }
-    chi_tiet.push(item);
-    if (quantity > 0) {
-      tong_tien += quantity * val;
-      so_luong_to_tien += quantity;
+
+    function deleteData(data = null) {
+      if (!confirm("Bạn có chắc muốn xoá?")) return;
+      showSpinner(true);
+      fetch(SHEET_URL, {
+        method: "POST",
+        body: JSON.stringify({ method: "delete", ...data }),
+      })
+        .then(() => fetchData())
+        .finally(() => showSpinner(false));
     }
-  });
 
-  const data = {
-    id, ngay_kiem_tra: ngay, nguoi_kiem: nguoi, chi_tiet,
-    tong_tien, tong_so_to: so_luong_to_tien, method: !isAdd ? 'edit' : 'add'
-  };
-
-  fetch(SHEET_URL, {
-    method: "POST",
-    body: JSON.stringify(data),
-  }).then(() => {
-    bootstrapModal.hide();
-    fetchData();
-  });
-}
-
-function deleteData(id) {
-  if (!confirm("Bạn có chắc muốn xoá?")) return;
-  fetch(SHEET_URL, {
-    method: "POST",
-    body: JSON.stringify({ method: "delete", id }),
-    headers: { "Content-Type": "application/json" }
-  }).then(() => fetchData());
-}
-
-document.addEventListener("DOMContentLoaded", fetchData);
-</script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    document.addEventListener("DOMContentLoaded", fetchData);
+  </script>
 </body>
 </html>
