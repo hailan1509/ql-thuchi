@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Thống Kê Thu Chi</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"/>
+  <style>
+    body {
+      background: #f0f2f5;
+      font-family: 'Segoe UI', sans-serif;
+      padding: 20px;
+      padding-bottom: 60px;
+    }
+
+    .navbar-nav .nav-link {
+      position: relative;
+      transition: color 0.3s ease;
+    }
+
+    .navbar-nav .nav-link.hover-underline::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 10%;
+      width: 80%;
+      height: 2px;
+      background-color: #0d6efd;
+      transform: scaleX(0);
+      transform-origin: center;
+      transition: transform 0.3s ease;
+    }
+
+    .navbar-nav .nav-link.hover-underline:hover::after {
+      transform: scaleX(1);
+    }
+
+    .navbar-nav .nav-link:hover {
+      color: #0d6efd !important;
+    }
+
+    .header {
+      text-align: center;
+      color: #1a73e8;
+      font-weight: 700;
+      margin-bottom: 20px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.1);
+    }
+
+    .chart-title {
+      font-size: 1.2rem;
+      font-weight: bold;
+      text-align: center;
+      margin-bottom: 15px;
+    }
+
+    .money-total {
+      font-size: 1.3rem;
+      font-weight: bold;
+      text-align: center;
+      margin-top: 15px;
+      margin-bottom: 20px;
+    }
+
+    .chart-container {
+      background: #fff;
+      border-radius: 10px;
+      padding: 15px;
+      box-shadow: 0 3px 8px rgba(0, 0, 0, 0.08);
+      margin-bottom: 20px;
+    }
+
+    .year-filter-container {
+      background: #fff;
+      border-radius: 10px;
+      padding: 15px;
+      box-shadow: 0 3px 8px rgba(0, 0, 0, 0.08);
+      margin: 20px auto;
+      max-width: 300px;
+      text-align: center;
+    }
+
+    .year-filter-label {
+      font-size: 1rem;
+      font-weight: 600;
+      color: #28a745;
+      margin-bottom: 10px;
+      display: block;
+    }
+
+    .year-filter {
+      max-width: 250px;
+      margin: 0 auto;
+      position: relative;
+    }
+
+    .form-select {
+      background: #f8f9fa;
+      border: 2px solid #28a745;
+      border-radius: 8px;
+      padding: 0.75rem 2.5rem 0.75rem 1rem;
+      font-size: 1.1rem;
+      color: #333;
+      transition: all 0.3s ease;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%2328a745'%3E%3Cpath d='M7 10l5 5 5-5H7z'/%3E%3C/svg%3E");
+      background-size: 20px;
+      background-position: right 0.75rem center;
+      background-repeat: no-repeat;
+      appearance: none;
+    }
+
+    .form-select:hover {
+      background-color: #e9ecef;
+    }
+
+    .form-select:focus {
+      border-color: #1a73e8;
+      box-shadow: 0 0 0 0.25rem rgba(26, 115, 232, 0.25);
+      outline: none;
+    }
+
+    .form-select option {
+      background: #fff;
+      color: #333;
+      font-size: 1rem;
+    }
+
+    #loading-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background-color: rgba(255, 255, 255, 0.6);
+      z-index: 9999;
+      display: none;
+      justify-content: center;
+      align-items: center;
+      backdrop-filter: blur(2px);
+    }
+
+    .no-data {
+      text-align: center;
+      color: #dc3545;
+      font-style: italic;
+      margin: 15px 0;
+    }
+
+    canvas {
+      display: block !important;
+      width: 100% !important;
+      max-height: 300px;
+    }
+
+    .text-purple {
+      color: #6f42c1;
+    }
+
+    @media (max-width: 576px) {
+      body {
+        padding: 15px;
+        padding-bottom: 50px;
+      }
+
+      .header {
+        font-size: 1.2rem;
+        margin-bottom: 15px;
+      }
+
+      .chart-title {
+        font-size: 1rem;
+        margin-bottom: 10px;
+      }
+
+      .money-total {
+        font-size: 1.1rem;
+        margin-top: 10px;
+        margin-bottom: 15px;
+      }
+
+      .chart-container {
+        padding: 10px;
+        margin-bottom: 15px;
+      }
+
+      .year-filter-container {
+        max-width: 250px;
+        padding: 10px;
+        margin: 15px auto;
+      }
+
+      .year-filter {
+        max-width: 180px;
+      }
+
+      .year-filter-label {
+        font-size: 0.9rem;
+        margin-bottom: 8px;
+      }
+
+      .form-select {
+        font-size: 1rem;
+        padding: 0.6rem 2rem 0.6rem 0.8rem;
+        background-size: 18px;
+      }
+
+      canvas {
+        max-height: 250px;
+      }
+    }
+
+    @keyframes dropdownOpen {
+      from {
+        transform: scaleY(0.95);
+        opacity: 0.8;
+      }
+      to {
+        transform: scaleY(1);
+        opacity: 1;
+      }
+    }
+
+    .form-select:active {
+      animation: dropdownOpen 0.2s ease-out;
+    }
+  </style>
+</head>
+<body>
+  <nav class="navbar navbar-expand-lg navbar-light shadow-sm bg-white py-3 sticky-top">
+    <div class="container">
+      <a class="navbar-brand fw-bold text-primary" href="#">💰THỐNG KÊ THU CHI</a>
+      <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#mainNavbar"
+        aria-controls="mainNavbar" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse justify-content-end" id="mainNavbar">
+        <ul class="navbar-nav">
+          <li class="nav-item mx-2">
+            <a class="nav-link text-dark fw-semibold hover-underline" href="i.html">Thu - Chi</a>
+          </li>
+          <li class="nav-item mx-2">
+            <a class="nav-link text-dark fw-semibold hover-underline" href="h.html">Hòm công đức</a>
+          </li>
+          <li class="nav-item mx-2">
+            <a class="nav-link text-dark fw-semibold hover-underline active" href="tk.html">Thống kê</a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <div id="loading-overlay">
+    <div class="spinner-border text-primary" role="status">
+      <span class="visually-hidden">Đang tải...</span>
+    </div>
+  </div>
+
+  <div class="container">
+    <div class="year-filter-container">
+        <label for="yearFilter" class="year-filter-label">Chọn năm</label>
+        <div class="year-filter">
+          <select id="yearFilter" class="form-select">
+            <!-- Options sẽ được thêm bằng JS -->
+          </select>
+        </div>
+      </div>
+    <div class="chart-container">
+        <div class="money-total" id="tongTienThuChi">Tổng tiền: Đang tải...</div>
+      <canvas id="thuChiChart"></canvas>
+      <div id="noDataThuChi" class="no-data" style="display: none;">
+        <p><i>Không có dữ liệu thu chi cho năm được chọn</i></p>
+      </div>
+    </div>
+    
+    <div class="chart-container">
+        <div class="money-total" id="tongTienHomCongDuc">Tổng hòm công đức: Đang tải...</div>
+      <canvas id="homCongDucChart"></canvas>
+      <div id="noDataHomCongDuc" class="no-data" style="display: none;">
+        <p><i>Không có dữ liệu hòm công đức cho năm được chọn</i></p>
+      </div>
+    </div>
+    
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/moment@2.29.4/moment.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <script>
+    const THU_CHI_URL = "https://script.google.com/macros/s/AKfycbyptwabaU8O-LAhOyl0pnYtAh5VU-nuzeHcIohlJPMSVqzosJC0YLp1FoYN0PujN8ud/exec";
+    const HOM_CONG_DUC_URL = "https://script.google.com/macros/s/AKfycbwSVJsZDuiIrLkCdni9fEiDvqs6rXOblxLOoS7H5rDiOqF_a-Lk2XCeoEdC2Dgn43S0/exec";
+    let thuChiData = [], homCongDucData = [];
+    let selectedYear = moment().year(); // Mặc định là năm hiện tại (2025)
+    let isRendering = false; // Ngăn render lặp
+
+    function showLoading() {
+      document.getElementById("loading-overlay").style.display = "flex";
+    }
+
+    function hideLoading() {
+      document.getElementById("loading-overlay").style.display = "none";
+    }
+
+    function populateYearFilter() {
+      const yearFilter = document.getElementById("yearFilter");
+      const currentYear = moment().year();
+      for (let year = currentYear; year >= 2020; year--) {
+        const option = document.createElement("option");
+        option.value = year;
+        option.text = year;
+        if (year === selectedYear) option.selected = true;
+        yearFilter.appendChild(option);
+      }
+    }
+
+    async function fetchData() {
+      try {
+        showLoading();
+        // Lấy dữ liệu thu chi
+        console.log("Fetching thu chi data...");
+        const thuChiRes = await fetch(THU_CHI_URL);
+        if (!thuChiRes.ok) throw new Error("Failed to fetch thu chi data");
+        thuChiData = await thuChiRes.json();
+        thuChiData = thuChiData.map(item => {
+          const ngay = moment(item.ngay, "YYYY-MM-DD", true);
+          if (!ngay.isValid()) console.warn(`Invalid date in thu chi: ${item.ngay}`);
+          const sotien = parseFloat(item.sotien);
+          if (isNaN(sotien) || sotien < 0) {
+            console.warn(`Invalid sotien in thu chi: ${item.sotien}`);
+            return null;
+          }
+          return { ...item, ngay, sotien };
+        }).filter(item => item !== null && item.ngay.isValid());
+        console.log("Thu chi data:", thuChiData);
+        console.log("Sotien values:", thuChiData.map(item => item.sotien));
+
+        // Lấy dữ liệu hòm công đức
+        console.log("Fetching hòm công đức data...");
+        const homCongDucRes = await fetch(HOM_CONG_DUC_URL + '?action=list');
+        if (!homCongDucRes.ok) throw new Error("Failed to fetch hòm công đức data");
+        homCongDucData = await homCongDucRes.json();
+        homCongDucData = homCongDucData.map(item => {
+          const ngay_kiem_tra = moment(item.ngay_kiem_tra, "DD/MM/YYYY", true);
+          if (!ngay_kiem_tra.isValid()) console.warn(`Invalid date in hòm công đức: ${item.ngay_kiem_tra}`);
+          const tong_tien = parseFloat(item.tong_tien);
+          if (isNaN(tong_tien) || tong_tien < 0) {
+            console.warn(`Invalid tong_tien in hòm công đức: ${item.tong_tien}`);
+            return null;
+          }
+          return { ...item, ngay_kiem_tra, tong_tien };
+        }).filter(item => item !== null && item.ngay_kiem_tra.isValid());
+        console.log("Hòm công đức data:", homCongDucData);
+        console.log("Tong_tien values:", homCongDucData.map(item => item.tong_tien));
+
+        renderCharts();
+        updateTotals();
+      } catch (err) {
+        console.error("Lỗi tải dữ liệu:", err);
+        alert("Đã có lỗi xảy ra khi tải dữ liệu! Vui lòng kiểm tra kết nối hoặc báo lại.");
+      } finally {
+        hideLoading();
+      }
+    }
+
+    function renderCharts() {
+      if (isRendering) {
+        console.log("Render đang chạy, bỏ qua...");
+        return;
+      }
+      isRendering = true;
+      try {
+        // Định nghĩa months tĩnh
+        const months = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
+        const labels = months.map(m => `Tháng ${m}`);
+        console.log("Chart labels:", labels);
+
+        // Biểu đồ thu chi
+        const thuChiCanvas = document.getElementById("thuChiChart");
+        if (!thuChiCanvas) throw new Error("Thu chi canvas not found");
+        const filteredThuChi = thuChiData.filter(item => item.ngay.year() === selectedYear);
+        console.log("Filtered thu chi data:", filteredThuChi);
+        const thuData = months.map(month => {
+          return filteredThuChi
+            .filter(item => item.loai === "thu" && item.ngay.month() + 1 === month)
+            .reduce((sum, item) => sum + item.sotien, 0);
+        });
+        const chiData = months.map(month => {
+          return filteredThuChi
+            .filter(item => item.loai === "chi" && item.ngay.month() + 1 === month)
+            .reduce((sum, item) => sum + item.sotien, 0);
+        });
+        console.log("Thu chi chart data:", { thuData, chiData, length: thuData.length });
+
+        // Tính suggestedMax cho trục Y
+        const maxThu = Math.max(...thuData);
+        const maxChi = Math.max(...chiData);
+        const maxY = Math.max(maxThu, maxChi) * 1.2; // Thêm 20% margin
+        console.log("Trục Y suggestedMax:", maxY);
+
+        const hasThuChiData = thuData.some(val => val > 0) || chiData.some(val => val > 0);
+        document.getElementById("noDataThuChi").style.display = hasThuChiData ? "none" : "block";
+        thuChiCanvas.style.display = hasThuChiData ? "block" : "none";
+
+        console.log("Thu chi chart before destroy:", window.thuChiChart);
+        if (window.thuChiChart && typeof window.thuChiChart.destroy === 'function') {
+          window.thuChiChart.destroy();
+          console.log("Thu chi chart destroyed");
+        }
+        const thuChiCtx = thuChiCanvas.getContext("2d");
+        window.thuChiChart = new Chart(thuChiCtx, {
+          type: "bar",
+          data: {
+            labels: labels,
+            datasets: [
+              {
+                label: "Thu",
+                data: thuData,
+                backgroundColor: "#28a745",
+                borderColor: "#28a745",
+                borderWidth: 1,
+              },
+              {
+                label: "Chi",
+                data: chiData,
+                backgroundColor: "#dc3545",
+                borderColor: "#dc3545",
+                borderWidth: 1,
+              },
+            ],
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            barPercentage: 0.4,
+            maxBarThickness: 20,
+            scales: {
+              x: {
+                title: { display: true, text: "Tháng", font: { size: 14 } },
+                ticks: {
+                  callback: function (value, index) {
+                    const month = index + 1;
+                    return [1, 4, 7, 10].includes(month) ? `Tháng ${month}` : "";
+                  },
+                  font: { size: window.innerWidth <= 576 ? 10 : 12 },
+                },
+              },
+              y: {
+                beginAtZero: true,
+                suggestedMax: maxY > 0 ? maxY : 1000000, // Mặc định 1 triệu nếu không có dữ liệu
+                title: { display: true, text: "Số tiền (VNĐ)", font: { size: 14 } },
+                ticks: {
+                  callback: function (value) {
+                    return value.toLocaleString();
+                  },
+                  font: { size: window.innerWidth <= 576 ? 10 : 12 },
+                },
+              },
+            },
+            plugins: {
+              tooltip: {
+                callbacks: {
+                  label: function (context) {
+                    return `${context.dataset.label}: ${context.raw.toLocaleString()} VNĐ`;
+                  },
+                },
+                titleFont: { size: window.innerWidth <= 576 ? 12 : 14 },
+                bodyFont: { size: window.innerWidth <= 576 ? 10 : 12 },
+              },
+              legend: {
+                position: "top",
+                labels: { font: { size: window.innerWidth <= 576 ? 10 : 12 } },
+              },
+            },
+          },
+        });
+        console.log("Thu chi chart created:", window.thuChiChart);
+
+        // Biểu đồ hòm công đức
+        const homCongDucCanvas = document.getElementById("homCongDucChart");
+        if (!homCongDucCanvas) throw new Error("Hòm công đức canvas not found");
+        const filteredHomCongDuc = homCongDucData.filter(item => item.ngay_kiem_tra.year() === selectedYear);
+        console.log("Filtered hòm công đức data:", filteredHomCongDuc);
+        const homCongDucDataChart = months.map(month => {
+          return filteredHomCongDuc
+            .filter(item => item.ngay_kiem_tra.month() + 1 === month)
+            .reduce((sum, item) => sum + item.tong_tien, 0);
+        });
+        console.log("Hòm công đức chart data:", { homCongDucDataChart, length: homCongDucDataChart.length });
+
+        // Tính suggestedMax cho trục Y hòm công đức
+        const maxHomCongDuc = Math.max(...homCongDucDataChart);
+        const maxYHomCongDuc = maxHomCongDuc * 1.2; // Thêm 20% margin
+        console.log("Trục Y hòm công đức suggestedMax:", maxYHomCongDuc);
+
+        const hasHomCongDucData = homCongDucDataChart.some(val => val > 0);
+        document.getElementById("noDataHomCongDuc").style.display = hasHomCongDucData ? "none" : "block";
+        homCongDucCanvas.style.display = hasHomCongDucData ? "block" : "none";
+
+        console.log("Hòm công đức chart before destroy:", window.homCongDucChart);
+        if (window.homCongDucChart && typeof window.homCongDucChart.destroy === 'function') {
+          window.homCongDucChart.destroy();
+          console.log("Hòm công đức chart destroyed");
+        }
+        const homCongDucCtx = homCongDucCanvas.getContext("2d");
+        window.homCongDucChart = new Chart(homCongDucCtx, {
+          type: "bar",
+          data: {
+            labels: labels,
+            datasets: [
+              {
+                label: "Hòm Công Đức",
+                data: homCongDucDataChart,
+                backgroundColor: "#6f42c1",
+                borderColor: "#6f42c1",
+                borderWidth: 1,
+              },
+            ],
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            barPercentage: 0.4,
+            maxBarThickness: 20,
+            scales: {
+              x: {
+                title: { display: true, text: "Tháng", font: { size: 14 } },
+                ticks: {
+                  callback: function (value, index) {
+                    const month = index + 1;
+                    return [1, 4, 7, 10].includes(month) ? `Tháng ${month}` : "";
+                  },
+                  font: { size: window.innerWidth <= 576 ? 10 : 12 },
+                },
+              },
+              y: {
+                beginAtZero: true,
+                suggestedMax: maxYHomCongDuc > 0 ? maxYHomCongDuc : 1000000, // Mặc định 1 triệu
+                title: { display: true, text: "Số tiền (VNĐ)", font: { size: 14 } },
+                ticks: {
+                  callback: function (value) {
+                    return value.toLocaleString();
+                  },
+                  font: { size: window.innerWidth <= 576 ? 10 : 12 },
+                },
+              },
+            },
+            plugins: {
+              tooltip: {
+                callbacks: {
+                  label: function (context) {
+                    return `${context.dataset.label}: ${context.raw.toLocaleString()} VNĐ`;
+                  },
+                },
+                titleFont: { size: window.innerWidth <= 576 ? 12 : 14 },
+                bodyFont: { size: window.innerWidth <= 576 ? 10 : 12 },
+              },
+              legend: {
+                position: "top",
+                labels: { font: { size: window.innerWidth <= 576 ? 10 : 12 } },
+              },
+            },
+          },
+        });
+        console.log("Hòm công đức chart created:", window.homCongDucChart);
+      } catch (err) {
+        console.error("Lỗi vẽ biểu đồ:", err);
+        alert("Đã có lỗi khi vẽ biểu đồ! Vui lòng thử lại hoặc báo lại.");
+      } finally {
+        isRendering = false;
+      }
+    }
+
+    function updateTotals() {
+      try {
+        // Tổng thu chi
+        const filteredThuChi = thuChiData.filter(item => item.ngay.year() === selectedYear);
+        const tongThu = filteredThuChi
+          .filter(item => item.loai === "thu")
+          .reduce((sum, item) => sum + item.sotien, 0);
+        const tongChi = filteredThuChi
+          .filter(item => item.loai === "chi")
+          .reduce((sum, item) => sum + item.sotien, 0);
+        const tong = tongThu - tongChi;
+        document.getElementById("tongTienThuChi").innerHTML = `
+          Tổng tiền: <span class="${tong >= 0 ? "text-success" : "text-danger"}">${tong.toLocaleString()} đ</span><br/>
+          <small class="text-muted">Thu: ${tongThu.toLocaleString()} | Chi: ${tongChi.toLocaleString()}</small>
+        `;
+        console.log("Tổng thu chi:", { tongThu, tongChi, tong });
+
+        // Tổng hòm công đức
+        const filteredHomCongDuc = homCongDucData.filter(item => item.ngay_kiem_tra.year() === selectedYear);
+        const tongHomCongDuc = filteredHomCongDuc
+          .reduce((sum, item) => sum + item.tong_tien, 0);
+        document.getElementById("tongTienHomCongDuc").innerHTML = `
+          Tổng hòm công đức: <span class="text-purple">${tongHomCongDuc.toLocaleString()} đ</span>
+        `;
+        console.log("Tổng hòm công đức:", tongHomCongDuc);
+      } catch (err) {
+        console.error("Lỗi tính tổng:", err);
+        alert("Đã có lỗi khi tính tổng! Vui lòng thử lại.");
+      }
+    }
+
+    document.getElementById("yearFilter").addEventListener("change", function () {
+      selectedYear = parseInt(this.value);
+      console.log("Selected year:", selectedYear);
+      renderCharts();
+      updateTotals();
+    });
+
+    document.addEventListener("DOMContentLoaded", () => {
+      console.log("Initializing page...");
+      populateYearFilter();
+      fetchData();
+    });
+  </script>
+</body>
+</html>

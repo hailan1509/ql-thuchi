@@ -367,10 +367,7 @@
             <a class="nav-link text-dark fw-semibold hover-underline" href="h.html">Hòm công đức</a>
           </li>
           <li class="nav-item mx-2">
-            <a class="nav-link text-dark fw-semibold hover-underline" href="#">Thống kê</a>
-          </li>
-          <li class="nav-item mx-2">
-            <a class="nav-link text-dark fw-semibold hover-underline" href="#">Cài đặt</a>
+            <a class="nav-link text-dark fw-semibold hover-underline" href="tk.html">Thống kê</a>
           </li>
         </ul>
       </div>
@@ -758,7 +755,7 @@
     }
 
     async function exportToExcel(data) {
-
+      showSpinner(true)
       const res = await fetch(`${SHEET_URL}?action=getDetail&id=${data.id}`);
       const dt = await res.json();
       let rs = {};
@@ -876,21 +873,22 @@
       });
 
       // Totals
-      worksheet.mergeCells('A24:C24');
+      worksheet.mergeCells('A24:B24');
       worksheet.getCell('A24').value = 'Tổng thu:';
       worksheet.getCell('A24').alignment = { horizontal: 'left' };
-      // worksheet.getCell('D24').value = data.tong_tien.toLocaleString();
-      worksheet.getCell('D24').alignment = { horizontal: 'right' };
+      worksheet.getCell('C24').value = data.tong_tien.toLocaleString();
+      worksheet.getCell('C24').alignment = { horizontal: 'center' };
 
       worksheet.mergeCells('A25:C25');
       worksheet.getCell('A25').value = 'Số dư còn lại';
       worksheet.getCell('A25').alignment = { horizontal: 'left' };
-      worksheet.getCell('D25').value = data.tong_tien.toLocaleString();
+      // worksheet.getCell('D25').value = data.tong_tien.toLocaleString();
       worksheet.getCell('D25').alignment = { horizontal: 'right' };
 
-      worksheet.mergeCells('A26:D26');
-      worksheet.getCell('A26').value = `(Bằng chữ: ${numberToText(data.tong_tien).replace(/^\w/, c => c.toUpperCase())}`;
+      worksheet.mergeCells('B26:D26');
+      worksheet.getCell('A26').value = "Bằng chữ:";
       worksheet.getCell('A26').alignment = { horizontal: 'left' };
+      worksheet.getCell('B26').value = ` ${numberToText(data.tong_tien).replace(/^\w/, c => c.toUpperCase())}`;
 
       // Conclusion
       worksheet.mergeCells('A28:D28');
@@ -914,6 +912,7 @@
       const buffer = await workbook.xlsx.writeBuffer();
       const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
       saveAs(blob, `Biên bản mở hòm công đức_${data.ngay_kiem_tra.replace(/\//g, '-')}.xlsx`);
+      showSpinner(false)
     }
 
     document.addEventListener("DOMContentLoaded", fetchData);
