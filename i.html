@@ -578,6 +578,7 @@
           <div class="mb-2">
             <input type="text" name="ngay_display" class="form-control datepicker" placeholder="Ngày (dd/mm/yyyy)" required autocomplete="off">
             <input type="hidden" name="ngay">
+            <input type="hidden" name="hcd">
           </div>
           <div class="mb-2">
             <select name="loai" class="form-control">
@@ -599,7 +600,7 @@
   <script src="https://cdn.jsdelivr.net/npm/moment@2.29.4/moment.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/pikaday@1.8.2/pikaday.min.js"></script>
   <script>
-    const SHEET_URL = "https://script.google.com/macros/s/AKfycbyptwabaU8O-LAhOyl0pnYtAh5VU-nuzeHcIohlJPMSVqzosJC0YLp1FoYN0PujN8ud/exec";
+    const SHEET_URL = "https://script.google.com/macros/s/AKfycbwPLLAilOwRJs3-J2mykkSaQt6EIoLGH5hmjbBnP_suGMJPFpe0gcPMrQH0XcLuZ9Z4/exec";
     let dataList = [], filteredList = [], currentPage = 1, perPage = 5; dataReal = [];
 
     document.addEventListener('DOMContentLoaded', function () {
@@ -700,7 +701,7 @@
     async function fetchData() {
       try {
         showLoading();
-        const res = await fetch(SHEET_URL);
+        const res = await fetch(`${SHEET_URL}?action=getThuChi`);
         const data = await res.json();
         dataList = data.reverse().map(item => ({
           ...item,
@@ -898,7 +899,7 @@
         alert("Vui lòng chọn hoặc nhập ngày hợp lệ theo định dạng dd/mm/yyyy (ví dụ: 25/12/2025).");
         return;
       }
-      data.method = 'add';
+      data.method = 'addThuChi';
       try {
         showLoading();
         await fetch(SHEET_URL, {
@@ -926,6 +927,7 @@
       form.querySelector("[name=ngay_display]").value = item.ngayDisplay;
       form.querySelector("[name=ngay]").value = item.ngay;
       form.querySelector("[name=loai]").value = item.loai;
+      form.querySelector("[name=hcd]").value = item.hcd || 0;
       const moneyDisplay = document.getElementById('moneyDisplayEdit');
       moneyDisplay.innerHTML = `Số tiền bạn đã nhập: <b>${new Intl.NumberFormat().format(item.sotien)} VNĐ</b>`;
       const picker = form.querySelector(".datepicker")._pikaday;
@@ -943,7 +945,7 @@
         alert("Vui lòng chọn hoặc nhập ngày hợp lệ theo định dạng dd/mm/yyyy (ví dụ: 25/12/2025).");
         return;
       }
-      data.method = 'edit';
+      data.method = 'editThuChi';
       try {
         showLoading();
         await fetch(SHEET_URL, {
@@ -965,7 +967,7 @@
           showLoading();
           await fetch(SHEET_URL, {
             method: "POST",
-            body: JSON.stringify({ row: row, method: 'delete' })
+            body: JSON.stringify({ row: row, method: 'deleteThuChi' })
           });
           fetchData();
         } catch (err) {

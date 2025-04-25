@@ -404,6 +404,7 @@
             <div class="col-12 mb-3">
               <label class="form-label fw-medium">Người kiểm</label>
               <input id="nguoi" class="form-control" placeholder="Nhập tên người kiểm">
+              <input type="hidden" id="thuchi">
             </div>
           </div>
           <h5 class="mt-3 mb-3 fw-bold">Chi tiết : <span id="tong_tien" class="text-muted"></span></h5>
@@ -423,7 +424,7 @@
   <script src="https://cdn.jsdelivr.net/npm/exceljs@4.3.0/dist/exceljs.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js"></script>
   <script>
-    const SHEET_URL = "https://script.google.com/macros/s/AKfycbybFAN8oTWec8y9P8NOXLLJMObxC7m8SQT39Pgfg8OSL3O3q2dIEi3PHyykDkW_nIOZ/exec";
+    const SHEET_URL = "https://script.google.com/macros/s/AKfycbwPLLAilOwRJs3-J2mykkSaQt6EIoLGH5hmjbBnP_suGMJPFpe0gcPMrQH0XcLuZ9Z4/exec";
     const denominations = [500, 1000, 2000, 5000, 10000, 20000, 50000, 100000, 200000, 500000];
 
     let allData = [], currentData = [];
@@ -533,6 +534,7 @@
       document.getElementById("editId").value = data?.id || "";
       document.getElementById("ngay").value = data?.ngay_kiem_tra || "";
       document.getElementById("nguoi").value = data?.nguoi_kiem || "";
+      document.getElementById("thuchi").value = data?.thuchi || "-1";
       if (data?.id) {
         showSpinner(true);
         fetch(`${SHEET_URL}?action=getDetail&id=${data.id}`)
@@ -583,7 +585,7 @@
                 <button class="btn btn-delete" onclick='deleteData(${JSON.stringify(row)})'>
                   <i class="bi bi-trash3 me-1"></i>Xoá
                 </button>
-                <button class="btn btn-export" onclick='exportToExcel(${JSON.stringify(row)})'>
+                <button class="btn btn-export" onclick='exportToPDF(${JSON.stringify(row)})'>
                   <i class="bi bi-file-earmark-excel me-1"></i>Excel
                 </button>
               </div>
@@ -647,6 +649,7 @@
       const isAdd = !document.getElementById("editId").value;
       const ngay = document.getElementById("ngay").value;
       const nguoi = document.getElementById("nguoi").value;
+      const thuchi = document.getElementById("thuchi").value;
 
       if (!ngay || !nguoi) {
         alert("Vui lòng nhập đầy đủ ngày và người kiểm!");
@@ -673,7 +676,7 @@
 
       const data = {
         id, ngay_kiem_tra: ngay, nguoi_kiem: nguoi, chi_tiet,
-        tong_tien, tong_so_to: so_luong_to_tien, method: isAdd ? 'add' : 'edit'
+        tong_tien, tong_so_to: so_luong_to_tien, method: isAdd ? 'add' : 'edit', thuchi
       };
 
       showSpinner(true);
@@ -915,7 +918,181 @@
       showSpinner(false)
     }
 
+    async function exportToPDF(data) {
+      showSpinner(true);
+
+      // Fetch data from API
+      const res = await fetch(`${SHEET_URL}?action=getDetail&id=${data.id}`);
+      const dt = await res.json();
+      let rs = {};
+      dt.forEach(i => rs[i.loai_tien] = i);
+      data.chi_tiet = rs;
+
+      // Define PDF document structure using pdfmake
+      const documentDefinition = {
+        content: [
+          // Title
+          {
+            text: 'CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM',
+            style: 'header',
+            alignment: 'center',
+            margin: [0, 0, 0, 5]
+          },
+          {
+            text: 'Độc lập – Tự do – Hạnh phúc',
+            style: 'header',
+            alignment: 'center',
+            margin: [0, 0, 0, 5]
+          },
+          {
+            text: 'BIÊN BẢN MỞ HÒM CÔNG ĐỨC',
+            style: 'header',
+            alignment: 'center',
+            margin: [0, 0, 0, 10]
+          },
+
+          // Date
+          {
+            text: `Hôm nay ngày ${data.ngay_kiem_tra}, tại Đình Tân Kim`,
+            alignment: 'left',
+            margin: [0, 0, 0, 10]
+          },
+
+          // Committee
+          { text: 'Chúng tôi gồm có:', alignment: 'left', margin: [0, 0, 0, 5] },
+          {
+            ul: [
+              '1. Ông: Đinh Văn Dũng - Thủ từ',
+              '2. Ông: Hoàng Sỹ Thế - Thư ký',
+              '3. Ông: Đinh Văn Dừa - Thủ quỹ',
+              '4. Ông: Hoàng Văn Theo - Thủ nhang'
+            ],
+            margin: [20, 0, 0, 10]
+          },
+
+          // Witness
+          {
+            text: '* Cùng nhau chứng kiến việc mở hòm công đức, niêm phong còn nguyên vẹn',
+            alignment: 'left',
+            margin: [0, 0, 0, 5]
+          },
+          {
+            text: '* Sau khi mở hòm cùng nhau kiểm đếm số tiền cụ thể như sau:',
+            alignment: 'left',
+            margin: [0, 0, 0, 10]
+          },
+
+          // Money table
+          {
+            table: {
+              headerRows: 1,
+              widths: ['25%', '25%', '25%', '25%'],
+              body: [
+                [
+                  { text: 'Loại tiền giấy', style: 'tableHeader', alignment: 'center' },
+                  { text: 'Số tờ', style: 'tableHeader', alignment: 'center' },
+                  { text: 'Thành tiền', style: 'tableHeader', alignment: 'center' },
+                  { text: 'Ghi chú', style: 'tableHeader', alignment: 'center' }
+                ],
+                ...denominations.map(val => {
+                  const quantity = data.chi_tiet?.[val]?.so_to || 0;
+                  return [
+                    { text: val.toLocaleString() + 'đ', alignment: 'center' },
+                    { text: quantity || '', alignment: 'center' },
+                    { text: quantity > 0 ? (quantity * val).toLocaleString() : '', alignment: 'center' },
+                    { text: '', alignment: 'center' }
+                  ];
+                }),
+                [
+                  { text: '', alignment: 'center' },
+                  { text: data.so_luong_to_tien, alignment: 'center' },
+                  { text: data.tong_tien.toLocaleString(), alignment: 'center' },
+                  { text: '', alignment: 'center' }
+                ]
+              ]
+            },
+            margin: [0, 0, 0, 10]
+          },
+
+          // Totals
+          {
+            columns: [
+              { text: 'Tổng thu:', width: '20%', alignment: 'left' },
+              { text: data.tong_tien.toLocaleString(), width: '80%', alignment: 'left' }
+            ],
+            margin: [0, 0, 0, 5]
+          },
+          {
+            columns: [
+              { text: 'Số dư còn lại', width: '75%', alignment: 'left' },
+              { text: "", width: '25%', alignment: 'right' }
+            ],
+            margin: [0, 0, 0, 5]
+          },
+          {
+            columns: [
+              { text: 'Bằng chữ:', width: '20%', alignment: 'left' },
+              { text: `${numberToText(data.tong_tien).replace(/^\w/, c => c.toUpperCase())}`, width: '80%' }
+            ],
+            margin: [0, 0, 0, 10]
+          },
+
+          // Conclusion
+          {
+            text: `Biên bản kết thúc vào hồi: ……h…….phút, ngày ${data.ngay_kiem_tra.split('/')[0]} tháng ${data.ngay_kiem_tra.split('/')[1]} năm ${data.ngay_kiem_tra.split('/')[2]}`,
+            alignment: 'left',
+            margin: [0, 0, 0, 20]
+          },
+
+          // Signatures
+          {
+            columns: [
+              { text: 'Thủ từ', style: 'signature', alignment: 'center' },
+              { text: 'Thủ quỹ', style: 'signature', alignment: 'center' },
+              { text: 'Thư ký', style: 'signature', alignment: 'center' },
+              { text: 'Thủ nhang', style: 'signature', alignment: 'center' }
+            ],
+            margin: [0, 0, 0, 40]
+          },
+          {
+            columns: [
+              { text: 'Đinh Văn Dũng', style: 'signature', alignment: 'center' },
+              { text: 'Đinh Văn Dừa', style: 'signature', alignment: 'center' },
+              { text: 'Hoàng Sỹ Thế', style: 'signature', alignment: 'center' },
+              { text: 'Hoàng Văn Theo', style: 'signature', alignment: 'center' }
+            ]
+          }
+        ],
+        styles: {
+          header: {
+            fontSize: 13,
+            bold: true
+          },
+          tableHeader: {
+            fontSize: 13,
+            bold: true,
+            fillColor: '#EEEEEE'
+          },
+          signature: {
+            fontSize: 13,
+            bold: true
+          }
+        },
+        defaultStyle: {
+          fontSize: 13,
+          alignment: 'middle'
+        }
+      };
+
+      // Generate and download the PDF
+      pdfMake.createPdf(documentDefinition).download(`Biên bản mở hòm công đức_${data.ngay_kiem_tra.replace(/\//g, '-')}.pdf`);
+      showSpinner(false);
+    }
+
     document.addEventListener("DOMContentLoaded", fetchData);
   </script>
 </body>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/pdfmake.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/vfs_fonts.min.js"></script>
 </html>
