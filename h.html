@@ -424,7 +424,7 @@
   <script src="https://cdn.jsdelivr.net/npm/exceljs@4.3.0/dist/exceljs.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js"></script>
   <script>
-    const SHEET_URL = "https://script.google.com/macros/s/AKfycbwPLLAilOwRJs3-J2mykkSaQt6EIoLGH5hmjbBnP_suGMJPFpe0gcPMrQH0XcLuZ9Z4/exec";
+    const SHEET_URL = "https://script.google.com/macros/s/AKfycbwBaZ-bTzluLoXECIksSd81VHp0OzwM4PYtxpc2jSRiDHnWoytBQejgGNGYUX2SOZ3c/exec";
     const denominations = [500, 1000, 2000, 5000, 10000, 20000, 50000, 100000, 200000, 500000];
 
     let allData = [], currentData = [];
@@ -687,8 +687,9 @@
         .then(() => {
           bootstrapModal.hide();
           fetchData();
+          showSpinner(false)
         })
-        .finally(() => showSpinner(false));
+        .finally(() => {});
     }
 
     function deleteData(data = null) {
