@@ -585,8 +585,11 @@
                 <button class="btn btn-delete" onclick='deleteData(${JSON.stringify(row)})'>
                   <i class="bi bi-trash3 me-1"></i>Xoá
                 </button>
-                <button class="btn btn-export" onclick='exportToPDF(${JSON.stringify(row)})'>
+                <button class="btn btn-export" onclick='exportToExcel(${JSON.stringify(row)})'>
                   <i class="bi bi-file-earmark-excel me-1"></i>Excel
+                </button>
+                <button class="btn btn-export" onclick='exportToPDF(${JSON.stringify(row)})'>
+                  <i class="bi bi-file-earmark-excel me-1"></i>PDF
                 </button>
               </div>
             </div>
