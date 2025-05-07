@@ -429,6 +429,13 @@
 
     let allData = [], currentData = [];
     let currentPage = 1, perPage = 5, bootstrapModal;
+    var dataChi = [];
+
+    setTimeout(async () => {
+      const res = await fetch(`${SHEET_URL}?action=getThuChi`);
+      const data = await res.json();
+      dataChi = data.filter(x => x.loai == 'chi');
+    }, 1500)
 
     // Khởi tạo Pikaday
     function initializePikaday(input, updateCallback = null) {
@@ -640,7 +647,7 @@
       fetch(`${SHEET_URL}?action=list`)
         .then(res => res.json())
         .then(data => {
-          allData = data;
+          allData = data.reverse();
           currentPage = 1;
           renderData();
         })
@@ -761,8 +768,22 @@
       return `ngày ${day} tháng ${vietnameseMonths[month - 1]} năm ${vietnameseYears[cycle]}`;
     }
 
-    async function exportToExcel(data) {
+    async function exportToExcel(data) {  
       showSpinner(true)
+      // tiền chi tính từ ngày kiểm hòm lần trước
+      let indexCur = allData.findIndex(x => x.id == data.id);
+      let tongChi = 0;
+      if (indexCur < allData.length - 1) {
+        tongChi = dataChi.filter( x => {
+          const from = new Date(allData[indexCur + 1].ngay_kiem_tra.split('/').reverse().join('-'));
+          const to = new Date(data.ngay_kiem_tra.split('/').reverse().join('-'));
+          const date = new Date(x.ngay);
+          return date > from && date <= to;
+        }).reduce( (tong, item) => {
+          tong += item.sotien;
+          return tong;
+        }, 0)
+      }
       const res = await fetch(`${SHEET_URL}?action=getDetail&id=${data.id}`);
       const dt = await res.json();
       let rs = {};
@@ -886,11 +907,18 @@
       worksheet.getCell('C24').value = data.tong_tien.toLocaleString();
       worksheet.getCell('C24').alignment = { horizontal: 'center' };
 
-      worksheet.mergeCells('A25:C25');
-      worksheet.getCell('A25').value = 'Số dư còn lại';
+
+      worksheet.mergeCells('A25:B25');
+      worksheet.getCell('A25').value = 'Tổng chi:' + `(từ ${(indexCur < allData.length - 1 ? allData[indexCur + 1].ngay_kiem_tra : data.ngay_kiem_tra)} đến ${data.ngay_kiem_tra})`;
       worksheet.getCell('A25').alignment = { horizontal: 'left' };
-      // worksheet.getCell('D25').value = data.tong_tien.toLocaleString();
-      worksheet.getCell('D25').alignment = { horizontal: 'right' };
+      worksheet.getCell('C25').value = tongChi.toLocaleString();
+      worksheet.getCell('C25').alignment = { horizontal: 'center' };
+
+      // worksheet.mergeCells('A25:C25');
+      // worksheet.getCell('A25').value = 'Số dư còn lại';
+      // worksheet.getCell('A25').alignment = { horizontal: 'left' };
+      // // worksheet.getCell('D25').value = data.tong_tien.toLocaleString();
+      // worksheet.getCell('D25').alignment = { horizontal: 'right' };
 
       worksheet.mergeCells('B26:D26');
       worksheet.getCell('A26').value = "Bằng chữ:";
